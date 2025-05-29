@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="tr" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <title>Süt İnekçiliği Sürü Hesaplayıcı</title>
+    <link href="node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        :root {
+            --titlebar-bg: #f8f9fa;
+            --titlebar-color: #495057;
+            --titlebar-hover: #e9ecef;
+            --titlebar-close-hover: #dc3545;
+        }
+
+        [data-bs-theme="dark"] {
+            --titlebar-bg: #212529;
+            --titlebar-color: #e9ecef;
+            --titlebar-hover: #343a40;
+            --titlebar-close-hover: #dc3545;
+        }
+
+        body {
+            padding: 15px;
+            transition: background-color 0.3s ease;
+            overflow: hidden;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .card {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 15px;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        [data-bs-theme="dark"] .card {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        .table-container {
+            max-height: calc(100vh - 280px);
+            overflow-y: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+        .table-container::-webkit-scrollbar {
+            display: none;
+        }
+        .table-container.expanded {
+            max-height: calc(100vh - 150px);
+        }
+        .table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            background-color: var(--bs-body-bg);
+        }
+        .form-label {
+            font-weight: 500;
+            font-size: 0.85rem;
+            margin-bottom: 0.2rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .section-title {
+            color: var(--bs-primary);
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            padding-bottom: 0.3rem;
+            border-bottom: 1px solid var(--bs-border-color);
+        }
+        .form-control {
+            font-size: 0.85rem;
+            padding: 0.25rem 0.5rem;
+            height: calc(1.5em + 0.5rem + 2px);
+        }
+        .form-select {
+            font-size: 0.85rem;
+            padding: 0.25rem 0.5rem;
+            height: calc(1.5em + 0.5rem + 2px);
+        }
+        .parameter-group {
+            border-right: 1px solid var(--bs-border-color);
+            padding: 0.5rem 0.75rem;
+        }
+        .parameter-group:last-child {
+            border-right: none;
+        }
+        .card-body {
+            padding: 0.8rem;
+        }
+        .input-group-sm > .form-control {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.85rem;
+        }
+        .input-group-sm > .input-group-text {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.85rem;
+        }
+        .form-check {
+            margin-bottom: 0;
+            font-size: 0.8rem;
+            padding-top: 0.25rem;
+        }
+        .form-check-input {
+            margin-top: 0.2rem;
+        }
+        .btn {
+            font-size: 0.85rem;
+            padding: 0.25rem 1rem;
+        }
+        .input-row {
+            margin-bottom: 0.4rem;
+        }
+        .input-row:last-child {
+            margin-bottom: 0;
+        }
+        .input-group {
+            flex-wrap: nowrap;
+        }
+        .titlebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 32px;
+            background-color: var(--titlebar-bg);
+            color: var(--titlebar-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 12px;
+            -webkit-app-region: drag;
+            z-index: 1000;
+            border-bottom: 1px solid var(--bs-border-color);
+            font-size: 13px;
+        }
+        .titlebar-left {
+            display: flex;
+            align-items: center;
+            flex: 1;
+        }
+        .titlebar-right {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+        }
+        .titlebar-icon {
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+            color: var(--titlebar-color);
+        }
+        .titlebar-title {
+            font-weight: 500;
+            flex-grow: 1;
+        }
+        .window-controls {
+            -webkit-app-region: no-drag;
+            display: flex;
+            height: 100%;
+        }
+        .window-control-btn {
+            background: none;
+            border: none;
+            color: var(--titlebar-color);
+            width: 46px;
+            height: 100%;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .window-control-btn:hover {
+            background-color: var(--titlebar-hover);
+        }
+        .window-control-btn.close:hover {
+            background-color: var(--titlebar-close-hover);
+            color: white;
+        }
+        .main-content {
+            margin-top: 32px;
+            padding: 15px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+        .theme-switch {
+            display: flex;
+            align-items: center;
+            margin-right: 10px;
+            -webkit-app-region: no-drag;
+        }
+        .theme-switch .form-check.form-switch {
+            min-height: unset;
+            padding-left: 0;
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+        .theme-switch .form-check-input {
+            float: none;
+            margin-left: 0;
+            margin-right: 6px;
+            cursor: pointer;
+            width: 2em;
+            height: 1em;
+        }
+        .theme-switch .form-check-label {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            color: var(--titlebar-color);
+        }
+        .theme-switch .form-check-label i {
+            font-size: 0.9rem;
+        }
+        .window-controls-group {
+            display: flex;
+            align-items: center;
+            -webkit-app-region: no-drag;
+        }
+        .header-controls {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+        }
+        .parameters-toggle .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            height: 31px;
+            min-width: 160px;
+            justify-content: center;
+        }
+        .parameters-toggle .btn i {
+            font-size: 0.85rem;
+        }
+        .results-card {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            margin-bottom: 0;
+        }
+        .results-card .card-body {
+            padding: 0;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+        .table {
+            margin-bottom: 0;
+        }
+        .table-responsive {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            scrollbar-width: none;  /* Firefox */
+            -ms-overflow-style: none;  /* Internet Explorer/Edge */
+        }
+        .table-responsive::-webkit-scrollbar {
+            display: none;  /* Chrome, Safari, Opera */
+        }
+        @media (max-width: 768px) {
+            .parameter-group {
+                border-right: none;
+                border-bottom: 1px solid var(--bs-border-color);
+                padding: 0.75rem 0;
+            }
+            .parameter-group:last-child {
+                border-bottom: none;
+            }
+            .form-label {
+                white-space: normal;
+            }
+        }
+        .parameters-toggle {
+            display: flex;
+            align-items: center;
+        }
+        .parameters-toggle .btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+        .parameters-toggle i {
+            transition: transform 0.3s ease;
+        }
+        .parameters-toggle .collapsed i {
+            transform: rotate(180deg);
+        }
+        .parameters-card {
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+        .parameters-card .card-header {
+            background-color: transparent;
+            border-bottom: 1px solid var(--bs-border-color);
+            padding: 0.75rem 1rem;
+        }
+        .parameters-card .card-header h5 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+        .main-content {
+            position: relative;
+            padding-top: 15px;
+        }
+        .alert-container {
+            position: fixed;
+            top: 45px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1050;
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            pointer-events: none;
+        }
+        .custom-alert {
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.5rem;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s ease;
+            background-color: var(--bs-body-bg);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            pointer-events: auto;
+        }
+        .custom-alert.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .custom-alert.alert-success {
+            border-left: 4px solid var(--bs-success);
+        }
+        .custom-alert.alert-danger {
+            border-left: 4px solid var(--bs-danger);
+        }
+        .custom-alert.alert-info {
+            border-left: 4px solid var(--bs-info);
+        }
+        .custom-alert .alert-content {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .custom-alert .close-btn {
+            background: none;
+            border: none;
+            padding: 0;
+            margin-left: 1rem;
+            cursor: pointer;
+            color: inherit;
+            opacity: 0.7;
+        }
+        .custom-alert .close-btn:hover {
+            opacity: 1;
+        }
+        .bi-chevron-up, .bi-chevron-down {
+            transition: transform 0.3s ease;
+        }
+        [data-bs-toggle="collapse"].collapsed .bi-chevron-down {
+            transform: rotate(0deg);
+        }
+        [data-bs-toggle="collapse"]:not(.collapsed) .bi-chevron-up {
+            transform: rotate(0deg);
+        }
+    </style>
+</head>
+<body>
+    <div class="titlebar">
+        <div class="titlebar-left">
+            <svg class="titlebar-icon" viewBox="0 0 24 24">
+                <use href="assets/icon.svg#icon"></use>
+            </svg>
+            <div class="titlebar-title">Süt İnekçiliği Sürü Hesaplayıcı</div>
+        </div>
+        <div class="titlebar-right">
+            <div class="theme-switch">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="themeSwitch">
+                    <label class="form-check-label" for="themeSwitch">
+                        <i class="bi bi-moon-stars"></i>
+                    </label>
+                </div>
+            </div>
+            <div class="window-controls">
+                <button class="window-control-btn" id="minimizeBtn">
+                    <i class="bi bi-dash-lg"></i>
+                </button>
+                <button class="window-control-btn" id="maximizeBtn">
+                    <i class="bi bi-square"></i>
+                </button>
+                <button class="window-control-btn close" id="closeBtn">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid main-content">
+        <div class="card mb-3 parameters-card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5>Hesaplama Parametreleri</h5>
+                    <div class="header-controls">
+                        <button class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2" type="button" data-bs-toggle="collapse" data-bs-target="#parametersCollapse" aria-expanded="true">
+                            <span class="button-text">Parametreleri Gizle</span>
+                            <i class="bi bi-chevron-up"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body position-relative">
+                <div class="collapse show" id="parametersCollapse">
+                    <form id="calculatorForm" class="row g-2">
+                        <div class="col-md-4 parameter-group">
+                            <h6 class="section-title">İnek Parametreleri</h6>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <label class="form-label">Başlangıç Sayısı</label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" class="form-control" id="initialCowCount" value="10" min="1">
+                                        <span class="input-group-text">adet</span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">Gebelik Ayı</label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" class="form-control" id="initialPregnancyMonth" value="6" min="1" max="9">
+                                        <span class="input-group-text">ay</span>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="randomInitialPregnancy">
+                                        <label class="form-check-label" for="randomInitialPregnancy">
+                                            Rastgele Gebelik Ayı
+                                            <i class="bi bi-question-circle-fill text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Her bir inek için gebelik ayı 1-9 arasında rastgele belirlenecektir."></i>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">Aylık Ekleme</label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" class="form-control" id="monthlyCows" value="1" min="0">
+                                        <span class="input-group-text">adet</span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">Gebelik Ayı</label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" class="form-control" id="newCowPregnancyMonth" value="6" min="1" max="9">
+                                        <span class="input-group-text">ay</span>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="randomMonthlyPregnancy">
+                                        <label class="form-check-label" for="randomMonthlyPregnancy">
+                                            Rastgele Gebelik Ayı
+                                            <i class="bi bi-question-circle-fill text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Her ay eklenen inekler için gebelik ayı 1-9 arasında rastgele belirlenecektir."></i>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 parameter-group">
+                            <h6 class="section-title">Genel Parametreler</h6>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <label class="form-label">Başlangıç Yılı</label>
+                                    <select class="form-select form-select-sm" id="startYear">
+                                        <option value="2024">2024</option>
+                                        <option value="2025">2025</option>
+                                        <option value="2026" selected>2026</option>
+                                        <option value="2027">2027</option>
+                                        <option value="2028">2028</option>
+                                        <option value="2029">2029</option>
+                                        <option value="2030">2030</option>
+                                    </select>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">Başlangıç Ayı</label>
+                                    <select class="form-select form-select-sm" id="startMonth">
+                                        <option value="1">Ocak</option>
+                                        <option value="2">Şubat</option>
+                                        <option value="3">Mart</option>
+                                        <option value="4">Nisan</option>
+                                        <option value="5">Mayıs</option>
+                                        <option value="6">Haziran</option>
+                                        <option value="7">Temmuz</option>
+                                        <option value="8">Ağustos</option>
+                                        <option value="9" selected>Eylül</option>
+                                        <option value="10">Ekim</option>
+                                        <option value="11">Kasım</option>
+                                        <option value="12">Aralık</option>
+                                    </select>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">Hesaplama Süresi</label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" class="form-control" id="months" value="24" min="1">
+                                        <span class="input-group-text">ay</span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">Kuruya Alma
+                                        <i class="bi bi-question-circle-fill text-muted" 
+                                           data-bs-toggle="tooltip" 
+                                           data-bs-placement="top" 
+                                           title="İneklerin doğuma kaç ay kala kuruya alınacağını (sağılmayacağını) belirtir. Bu süre içinde süt üretimi durdurulur ve inek dinlenmeye alınır."></i>
+                                    </label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" class="form-control" id="milkingThreshold" value="2" min="0">
+                                        <span class="input-group-text">ay</span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">Düve Yaşı
+                                        <i class="bi bi-question-circle-fill text-muted" 
+                                           data-bs-toggle="tooltip" 
+                                           data-bs-placement="top" 
+                                           title="Dişi buzağıların kaç aylıkken düve olarak sürüye katılacağını belirtir. Bu yaşa gelen dişi buzağılar gebe bırakılmak üzere sürüye dahil edilir."></i>
+                                    </label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" class="form-control" id="calfMaturityAge" value="14" min="1">
+                                        <span class="input-group-text">ay</span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">Erkek Satış
+                                        <i class="bi bi-question-circle-fill text-muted" 
+                                           data-bs-toggle="tooltip" 
+                                           data-bs-placement="top" 
+                                           title="Erkek buzağıların kaç aylıkken satılacağını/sürüden çıkarılacağını belirtir. Bu yaşa gelen erkek buzağılar satılır ve gelir olarak kaydedilir."></i>
+                                    </label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" class="form-control" id="maleCalfRemovalAge" value="6" min="1">
+                                        <span class="input-group-text">ay</span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">Doğum Başarı
+                                        <i class="bi bi-question-circle-fill text-muted" 
+                                           data-bs-toggle="tooltip" 
+                                           data-bs-placement="top" 
+                                           title="İneklerin doğum başarı oranı (%). Başarısız doğumlarda buzağı olmaz ve inek belirtilen süre sonra tekrar gebe kalabilir. Örneğin %95 başarı oranı, her 100 doğumdan 95'inin başarılı olacağını gösterir."></i>
+                                    </label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" class="form-control" id="birthSuccessRate" value="95" min="1" max="100">
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">Doğum Sonrası
+                                        <i class="bi bi-question-circle-fill text-muted" 
+                                           data-bs-toggle="tooltip" 
+                                           data-bs-placement="top" 
+                                           title="İneklerin doğumdan kaç ay sonra tekrar gebe kalabileceğini belirtir. Bu süre, ineğin doğum sonrası toparlanması ve yeni bir gebelik için hazır hale gelmesi için gereken minimum süredir."></i>
+                                    </label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" class="form-control" id="postBirthWait" value="2" min="1">
+                                        <span class="input-group-text">ay</span>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="useFemaleSeed">
+                                        <label class="form-check-label" for="useFemaleSeed">
+                                            Dişi Sperm Kullanımı
+                                            <i class="bi bi-question-circle-fill text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Dişi buzağı olasılığını %90'a çıkaran cinsiyet ayrımlı sperma kullanımı"></i>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 parameter-group">
+                            <h6 class="section-title">Gelir/Gider Parametreleri</h6>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <label class="form-label">Günlük Süt</label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" class="form-control" id="milkPerCow" value="25" min="1" step="0.1">
+                                        <span class="input-group-text">lt</span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">Süt Fiyatı</label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" class="form-control" id="milkPrice" value="21" min="0" step="0.01">
+                                        <span class="input-group-text">₺</span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">Erkek Buzağı</label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" class="form-control" id="maleCalf" value="15000" min="0" step="1">
+                                        <span class="input-group-text">₺</span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">Günlük Yem</label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" class="form-control" id="feedCostPerCow" value="150" min="0" step="0.01">
+                                        <span class="input-group-text">₺</span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">Buzağı Yem Oranı
+                                        <i class="bi bi-question-circle-fill text-muted" 
+                                           data-bs-toggle="tooltip" 
+                                           data-bs-placement="top" 
+                                           title="Buzağıların günlük yem tüketiminin inek yem tüketimine oranı. Örneğin %20 için 20 giriniz. Bu oran, buzağıların yem maliyetini hesaplamak için kullanılır."></i>
+                                    </label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" class="form-control" id="calfFeedRatio" value="20" min="0" max="100" step="1">
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Diğer Giderler</label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" class="form-control" id="otherExpenses" value="25000" min="0" step="1">
+                                        <span class="input-group-text">₺</span>
+                                    </div>
+                                </div>
+                                <div class="col-12 text-center mt-2">
+                                    <button type="button" class="btn btn-outline-primary btn-sm" id="updateFinancials">
+                                        <i class="bi bi-arrow-clockwise"></i> Finansal Değerleri Güncelle
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 text-center mt-2">
+                            <div class="btn-group">
+                                <button type="submit" class="btn btn-primary btn-sm">
+                                    <i class="bi bi-calculator"></i> Hesapla
+                                </button>
+                                <button type="button" class="btn btn-danger btn-sm" id="resetTableBtn">
+                                    <i class="bi bi-trash"></i> Tabloyu Temizle
+                                </button>
+                                <button type="button" class="btn btn-warning btn-sm" id="resetInputsBtn">
+                                    <i class="bi bi-arrow-counterclockwise"></i> Varsayılan Değerler
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="card results-card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Tarih</th>
+                                <th>Sağmal <i class="bi bi-info-circle-fill text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Sağmal / Kuruda"></i></th>
+                                <th>Gebe <i class="bi bi-info-circle-fill text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Düve / İnek"></i></th>
+                                <th>Dişi Buzağı</th>
+                                <th>Erkek Buzağı <i class="bi bi-info-circle-fill text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Mevcut / Çıkartılmış"></i></th>
+                                <th>Toplam Hayvan <i class="bi bi-info-circle-fill text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Sürüdeki toplam hayvan sayısı (İnekler + Buzağılar)"></i></th>
+                                <th>Gelir/Gider <i class="bi bi-info-circle-fill text-muted" data-bs-toggle="tooltip" data-bs-placement="top" 
+                                    title="GELİRLER:
+• Süt Geliri = Sağmal İnek Sayısı × Günlük Süt × 30 gün × Süt Fiyatı
+• Erkek Buzağı Satış = Satılan Erkek Buzağı × 15,000₺
+
+GİDERLER:
+• İnek Yem = Toplam İnek × Günlük Yem × 30 gün
+• Buzağı Yem = Toplam Buzağı × (Günlük Yem × 0.2) × 30 gün
+• Diğer Giderler = Sabit Aylık Gider"></i></th>
+                                <th>Net Kar/Zarar <i class="bi bi-info-circle-fill text-muted" data-bs-toggle="tooltip" data-bs-placement="top" 
+                                    title="NET KAR/ZARAR = TOPLAM GELİR - TOPLAM GİDER
+
+TOPLAM GELİR:
+• Aylık Süt Geliri
+• Erkek Buzağı Satış Geliri
+
+TOPLAM GİDER:
+• Büyükbaş Yem Giderleri
+• Buzağı Yem Giderleri
+• Sabit Giderler (İşçilik, Elektrik, Su, Veteriner vb.)
+
+Not: Pozitif değerler yeşil, negatif değerler kırmızı renkte gösterilir."></i></th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultsTable">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="alert-container"></div>
+
+    <script src="node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const { ipcRenderer } = require('electron');
+        
+        // DOM yüklendiğinde çalışacak kodlar
+        document.addEventListener('DOMContentLoaded', () => {
+            // Window control buttons
+            document.getElementById('minimizeBtn').addEventListener('click', () => {
+                ipcRenderer.send('minimize-window');
+            });
+
+            document.getElementById('maximizeBtn').addEventListener('click', () => {
+                ipcRenderer.send('maximize-window');
+            });
+
+            document.getElementById('closeBtn').addEventListener('click', () => {
+                ipcRenderer.send('close-window');
+            });
+
+            // Tablo temizleme fonksiyonu
+            document.getElementById('resetTableBtn').addEventListener('click', () => {
+                const tbody = document.getElementById('resultsTable');
+                
+                if (tbody.children.length > 0) {
+                    tbody.innerHTML = '';
+                    // Main process'e reset mesajı gönder
+                    ipcRenderer.send('reset-calculations');
+                    showAlert('Hesaplama sonuçları sıfırlandı.', 'info');
+                } else {
+                    showAlert('Tablo zaten boş.', 'info');
+                }
+            });
+
+            // Input değerlerini varsayılana döndürme fonksiyonu
+            document.getElementById('resetInputsBtn').addEventListener('click', () => {
+                // İnek parametreleri
+                document.getElementById('initialCowCount').value = '10';
+                document.getElementById('initialPregnancyMonth').value = '6';
+                document.getElementById('randomInitialPregnancy').checked = false;
+                document.getElementById('monthlyCows').value = '1';
+                document.getElementById('newCowPregnancyMonth').value = '6';
+                document.getElementById('randomMonthlyPregnancy').checked = false;
+
+                // Genel parametreler
+                document.getElementById('startYear').value = '2026';
+                document.getElementById('startMonth').value = '9';
+                document.getElementById('months').value = '24';
+                document.getElementById('milkingThreshold').value = '2';
+                document.getElementById('calfMaturityAge').value = '14';
+                document.getElementById('maleCalfRemovalAge').value = '6';
+                document.getElementById('birthSuccessRate').value = '95';
+                document.getElementById('postBirthWait').value = '2';
+                document.getElementById('useFemaleSeed').checked = false;
+
+                // Gelir/Gider parametreleri
+                document.getElementById('milkPerCow').value = '25';
+                document.getElementById('milkPrice').value = '21';
+                document.getElementById('maleCalf').value = '15000';
+                document.getElementById('feedCostPerCow').value = '150';
+                document.getElementById('calfFeedRatio').value = '20';
+                document.getElementById('otherExpenses').value = '25000';
+
+                // Input'ları aktif/pasif durumlarını düzenleme
+                document.getElementById('initialPregnancyMonth').disabled = false;
+                document.getElementById('newCowPregnancyMonth').disabled = false;
+
+                showAlert('Tüm değerler varsayılana döndürüldü.', 'info');
+            });
+
+            // Theme switching
+            const themeSwitch = document.getElementById('themeSwitch');
+            const html = document.documentElement;
+            
+            // Check for saved theme preference
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                html.setAttribute('data-bs-theme', savedTheme);
+                themeSwitch.checked = savedTheme === 'dark';
+            }
+
+            themeSwitch.addEventListener('change', function() {
+                const theme = this.checked ? 'dark' : 'light';
+                html.setAttribute('data-bs-theme', theme);
+                localStorage.setItem('theme', theme);
+            });
+
+            // Handle random pregnancy toggles
+            document.getElementById('randomInitialPregnancy').addEventListener('change', function() {
+                const input = document.getElementById('initialPregnancyMonth');
+                input.disabled = this.checked;
+                if (this.checked) {
+                    input.value = 'Rastgele';
+                } else {
+                    input.value = '6';
+                }
+            });
+
+            document.getElementById('randomMonthlyPregnancy').addEventListener('change', function() {
+                const input = document.getElementById('newCowPregnancyMonth');
+                input.disabled = this.checked;
+                if (this.checked) {
+                    input.value = 'Rastgele';
+                } else {
+                    input.value = '6';
+                }
+            });
+
+            // Alert sistemi
+            function showAlert(message, type = 'info') {
+                const alertContainer = document.querySelector('.alert-container');
+                const alertElement = document.createElement('div');
+                alertElement.className = `custom-alert alert-${type}`;
+                
+                alertElement.innerHTML = `
+                    <div class="alert-content">
+                        <i class="bi ${type === 'success' ? 'bi-check-circle' : 'bi-info-circle'}"></i>
+                        <span>${message}</span>
+                    </div>
+                    <button type="button" class="close-btn" onclick="this.parentElement.remove()">
+                        <i class="bi bi-x"></i>
+                    </button>
+                `;
+                
+                alertContainer.appendChild(alertElement);
+                
+                // Animasyon için setTimeout kullanımı
+                setTimeout(() => alertElement.classList.add('show'), 10);
+                
+                // 5 saniye sonra otomatik kapanma
+                setTimeout(() => {
+                    alertElement.classList.remove('show');
+                    setTimeout(() => alertElement.remove(), 300);
+                }, 5000);
+            }
+
+            // Finansal değerleri güncelleme fonksiyonunda alert kullanımı
+            document.getElementById('updateFinancials').addEventListener('click', function() {
+                const financialParams = {
+                    milk_per_cow: parseFloat(document.getElementById('milkPerCow').value),
+                    milk_price: parseFloat(document.getElementById('milkPrice').value),
+                    male_calf_price: parseFloat(document.getElementById('maleCalf').value),
+                    feed_cost_per_cow: parseFloat(document.getElementById('feedCostPerCow').value),
+                    calf_feed_ratio: parseFloat(document.getElementById('calfFeedRatio').value) / 100, // Yüzdeyi ondalık sayıya çevir
+                    other_expenses: parseFloat(document.getElementById('otherExpenses').value)
+                };
+
+                // Input validation
+                for (let key in financialParams) {
+                    if (isNaN(financialParams[key])) {
+                        showAlert('Lütfen tüm finansal değerleri doğru şekilde doldurun.', 'danger');
+                        return;
+                    }
+                }
+
+                // Buzağı yem oranı kontrolü
+                if (financialParams.calf_feed_ratio < 0 || financialParams.calf_feed_ratio > 1) {
+                    showAlert('Buzağı yem oranı 0-100 arasında olmalıdır.', 'danger');
+                    return;
+                }
+
+                ipcRenderer.send('update-financials', financialParams);
+            });
+
+            // Update the form submit handler
+            document.getElementById('calculatorForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const params = {
+                    initial_cow_count: parseInt(document.getElementById('initialCowCount').value),
+                    initial_pregnancy_month: document.getElementById('randomInitialPregnancy').checked ? 'random' : 
+                        parseInt(document.getElementById('initialPregnancyMonth').value),
+                    monthly_new_cows: parseInt(document.getElementById('monthlyCows').value),
+                    new_cow_pregnancy_month: document.getElementById('randomMonthlyPregnancy').checked ? 'random' : 
+                        parseInt(document.getElementById('newCowPregnancyMonth').value),
+                    months: parseInt(document.getElementById('months').value),
+                    milking_threshold: parseInt(document.getElementById('milkingThreshold').value),
+                    calf_maturity_age: parseInt(document.getElementById('calfMaturityAge').value),
+                    male_calf_removal_age: parseInt(document.getElementById('maleCalfRemovalAge').value),
+                    birth_success_rate: parseInt(document.getElementById('birthSuccessRate').value),
+                    post_birth_wait: parseInt(document.getElementById('postBirthWait').value),
+                    use_female_sperm: document.getElementById('useFemaleSeed').checked,
+                    start_year: parseInt(document.getElementById('startYear').value),
+                    start_month: parseInt(document.getElementById('startMonth').value),
+                    // Gelir/gider parametreleri
+                    milk_per_cow: parseFloat(document.getElementById('milkPerCow').value),
+                    milk_price: parseFloat(document.getElementById('milkPrice').value),
+                    male_calf_price: parseFloat(document.getElementById('maleCalf').value),
+                    feed_cost_per_cow: parseFloat(document.getElementById('feedCostPerCow').value),
+                    calf_feed_ratio: parseFloat(document.getElementById('calfFeedRatio').value) / 100, // Yüzdeyi ondalık sayıya çevir
+                    other_expenses: parseFloat(document.getElementById('otherExpenses').value)
+                };
+
+                // Input validation
+                for (let key in params) {
+                    if (typeof params[key] === 'number' && isNaN(params[key]) && params[key] !== 'random') {
+                        showAlert('Lütfen tüm alanları doğru şekilde doldurun.', 'danger');
+                        return;
+                    }
+                }
+
+                ipcRenderer.send('calculate-herd', params);
+            });
+
+            ipcRenderer.on('calculation-results', (event, results) => {
+                const tbody = document.getElementById('resultsTable');
+                tbody.innerHTML = '';
+                
+                results.forEach(month => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${month.date}</td>
+                        <td>${month.milking_cows} / ${month.dry_cows}</td>
+                        <td>${month.pregnant_heifers} / ${month.pregnant_cows}</td>
+                        <td>${month.female_calves}</td>
+                        <td>${month.male_calves} / ${month.total_removed_male_calves}</td>
+                        <td>${month.total_animals}</td>
+                        <td>${month.income.toLocaleString('tr-TR')} ₺ / ${month.expenses.toLocaleString('tr-TR')} ₺</td>
+                        <td class="${month.profit >= 0 ? 'text-success' : 'text-danger'}">${month.profit.toLocaleString('tr-TR')} ₺</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+                showAlert('Hesaplama başarıyla tamamlandı.', 'success');
+            });
+
+            ipcRenderer.on('calculation-error', (event, error) => {
+                showAlert('Hesaplama sırasında bir hata oluştu: ' + error, 'danger');
+            });
+
+            // Parametre kartı daraltma/genişletme işlevselliği
+            const parametersCollapse = document.getElementById('parametersCollapse');
+            const parametersCard = document.querySelector('.parameters-card');
+            const tableContainer = document.querySelector('.table-responsive');
+            const toggleButton = document.querySelector('[data-bs-toggle="collapse"]');
+            const buttonText = toggleButton.querySelector('.button-text');
+            const buttonIcon = toggleButton.querySelector('i');
+
+            // Bootstrap collapse olaylarını dinle
+            parametersCollapse.addEventListener('show.bs.collapse', function () {
+                tableContainer.classList.remove('expanded');
+                buttonText.textContent = 'Parametreleri Gizle';
+                buttonIcon.classList.remove('bi-chevron-down');
+                buttonIcon.classList.add('bi-chevron-up');
+                toggleButton.classList.remove('collapsed');
+                parametersCard.classList.remove('collapsed');
+            });
+
+            parametersCollapse.addEventListener('hide.bs.collapse', function () {
+                tableContainer.classList.add('expanded');
+                buttonText.textContent = 'Parametreleri Göster';
+                buttonIcon.classList.remove('bi-chevron-up');
+                buttonIcon.classList.add('bi-chevron-down');
+                toggleButton.classList.add('collapsed');
+                parametersCard.classList.add('collapsed');
+            });
+
+            // Sayfa yüklendiğinde varsayılan durumu ayarla
+            document.addEventListener('DOMContentLoaded', function() {
+                const isCollapsed = !parametersCollapse.classList.contains('show');
+                if (isCollapsed) {
+                    tableContainer.classList.add('expanded');
+                    buttonText.textContent = 'Parametreleri Göster';
+                    buttonIcon.classList.remove('bi-chevron-up');
+                    buttonIcon.classList.add('bi-chevron-down');
+                    toggleButton.classList.add('collapsed');
+                    parametersCard.classList.add('collapsed');
+                } else {
+                    buttonText.textContent = 'Parametreleri Gizle';
+                    buttonIcon.classList.remove('bi-chevron-down');
+                    buttonIcon.classList.add('bi-chevron-up');
+                    toggleButton.classList.remove('collapsed');
+                }
+            });
+
+            // Initialize tooltips
+            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+            const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+        });
+    </script>
+</body>
+</html> 
