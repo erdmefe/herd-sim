@@ -5,6 +5,8 @@ import json
 import sys
 import random
 from dateutil.relativedelta import relativedelta
+import pickle
+import base64
 
 @dataclass
 class Cow:
@@ -28,7 +30,10 @@ class HerdManager:
                  use_female_sperm=False, start_year=2026, start_month=9,
                  post_birth_wait=2, milk_per_cow=25, milk_price=21,
                  feed_cost_per_cow=150, other_expenses=25000,
-                 male_calf_price=15000, calf_feed_ratio=0.2):
+                 male_calf_price=15000, calf_feed_ratio=0.2,
+                 auto_add_cows=False, female_cow_threshold=2,
+                 max_auto_add_cows=3, cow_source_type='external',
+                 new_cow_price=75000):
         self.cows: List[Cow] = []
         self.calves: List[Calf] = []
         self.current_date = datetime(start_year, start_month, 1)
@@ -44,6 +49,11 @@ class HerdManager:
         self.use_female_sperm = use_female_sperm
         self.post_birth_wait = post_birth_wait
         
+        # Otomatik inek ekleme parametreleri
+        self.auto_add_cows = auto_add_cows
+        self.female_cow_threshold = female_cow_threshold
+        self.max_auto_add_cows = max_auto_add_cows
+        
         # Gelir/gider parametreleri
         self.milk_per_cow = milk_per_cow  # Günlük süt üretimi (lt)
         self.milk_price = milk_price  # Süt litre fiyatı (TL)
@@ -51,6 +61,11 @@ class HerdManager:
         self.other_expenses = other_expenses  # Aylık diğer giderler (TL)
         self.male_calf_price = male_calf_price  # Erkek buzağı satış fiyatı (TL)
         self.calf_feed_ratio = calf_feed_ratio  # Buzağı yem oranı (0-1 arası)
+        
+        # Yeni inek parametreleri
+        self.cow_source_type = cow_source_type  # 'external' veya 'internal'
+        self.new_cow_price = new_cow_price  # Yeni inek fiyatı (TL)
+        self.monthly_cow_expenses = 0  # Her ay eklenen ineklerin toplam maliyeti
         
         # Initialize with initial cows - Başlangıçtaki inekler doğum yapmış kabul edilir
         for _ in range(initial_cow_count):
@@ -67,8 +82,13 @@ class HerdManager:
                 has_given_birth=True  # Başlangıçtaki inekler doğum yapmış kabul edilir
             ))
 
+        self.monthly_stats = []  # Aylık istatistikleri saklamak için yeni liste
+
     def add_monthly_cow(self):
-        # Add new pregnant cows based on configuration - Aylık eklenen inekler doğum yapmış kabul edilir
+        # Her ay başında yeni inek maliyetini sıfırla
+        self.monthly_cow_expenses = 0
+        
+        # Manuel eklenen inekler
         for _ in range(self.monthly_new_cows):
             if self.new_cow_pregnancy_month == 'random':
                 preg_month = random.randint(1, 9)
@@ -80,9 +100,55 @@ class HerdManager:
                 is_pregnant=True,
                 months_until_birth=months_until_birth,
                 is_milking=months_until_birth > self.milking_threshold,
-                has_given_birth=True  # Aylık eklenen inekler doğum yapmış kabul edilir
+                has_given_birth=True
             )
             self.cows.append(new_cow)
+            
+            # Öz kaynak seçiliyse maliyeti ekle
+            if self.cow_source_type == 'internal':
+                self.monthly_cow_expenses += self.new_cow_price
+
+        # Otomatik inek ekleme kontrolü
+        if self.auto_add_cows:
+            # Dişi buzağıları yaşlarına göre sırala (büyükten küçüğe)
+            female_calves = sorted(
+                [calf for calf in self.calves if calf.is_female],
+                key=lambda x: x.age_months,
+                reverse=True
+            )
+            
+            # Eklenebilecek inek sayısını hesapla
+            auto_add_count = min(
+                len(female_calves) // self.female_cow_threshold,  # Dişi buzağı sayısına göre eklenebilecek inek
+                self.max_auto_add_cows  # Maksimum ekleme limiti
+            )
+            
+            if auto_add_count > 0:
+                # Kullanılacak buzağıları seç (en yaşlı olanlardan başla)
+                calves_to_remove = female_calves[:auto_add_count * self.female_cow_threshold]
+                
+                # Seçilen buzağıları sürüden çıkar
+                self.calves = [calf for calf in self.calves if calf not in calves_to_remove]
+                
+                # Her buzağı grubu için bir inek ekle
+                for _ in range(auto_add_count):
+                    if self.new_cow_pregnancy_month == 'random':
+                        preg_month = random.randint(1, 9)
+                    else:
+                        preg_month = self.new_cow_pregnancy_month
+                        
+                    months_until_birth = 9 - preg_month + 1
+                    new_cow = Cow(
+                        is_pregnant=True,
+                        months_until_birth=months_until_birth,
+                        is_milking=months_until_birth > self.milking_threshold,
+                        has_given_birth=True
+                    )
+                    self.cows.append(new_cow)
+                    
+                    # Öz kaynak seçiliyse maliyeti ekle
+                    if self.cow_source_type == 'internal':
+                        self.monthly_cow_expenses += self.new_cow_price
 
     def process_month(self):
         # Process existing cows
@@ -173,33 +239,83 @@ class HerdManager:
         self.add_monthly_cow()
         self.current_date += relativedelta(months=1)
 
-    def calculate_income(self, milking_cows):
-        # Aylık süt geliri hesaplama
-        daily_milk = milking_cows * self.milk_per_cow  # Günlük toplam süt üretimi
-        monthly_milk = daily_milk * 30  # Aylık toplam süt üretimi
-        milk_income = monthly_milk * self.milk_price  # Aylık süt geliri
-        
-        # Satılan erkek buzağılardan gelir
-        male_calf_income = self.male_calf_price * (
-            sum(1 for calf in self.calves 
-                if not calf.is_female and calf.age_months >= self.male_calf_removal_age)
-        )
-        
-        return milk_income + male_calf_income
+        # Her ay işlendiğinde istatistikleri sakla
+        self.monthly_stats.append(self.get_statistics())
 
-    def calculate_expenses(self):
-        # Tüm inekler için yem gideri
-        total_cows = len(self.cows)
-        daily_feed_cost = total_cows * self.feed_cost_per_cow
-        monthly_feed_cost = daily_feed_cost * 30
+    def calculate_income(self, milking_cows, removed_male_calves=None):
+        """
+        Aylık gelir hesaplama
+        Args:
+            milking_cows (int): Sağmal inek sayısı
+            removed_male_calves (int, optional): O ay satılan erkek buzağı sayısı
+        Returns:
+            float: Toplam aylık gelir
+        """
+        # 1. Süt geliri hesaplama
+        # Günlük süt üretimi = Sağmal inek sayısı × İnek başına günlük süt miktarı
+        daily_milk = float(milking_cows) * float(self.milk_per_cow)
+        # Aylık süt üretimi = Günlük süt üretimi × 30 gün
+        monthly_milk = daily_milk * 30.0
+        # Aylık süt geliri = Aylık süt üretimi × Süt litre fiyatı
+        milk_income = monthly_milk * float(self.milk_price)
         
-        # Buzağılar için yem gideri (kullanıcının belirlediği oran kadar)
-        total_calves = len(self.calves)
-        daily_calf_feed_cost = total_calves * (self.feed_cost_per_cow * self.calf_feed_ratio)
-        monthly_calf_feed_cost = daily_calf_feed_cost * 30
+        # 2. Erkek buzağı satış geliri
+        if removed_male_calves is not None:
+            # Finansal güncelleme sırasında, o ay satılan buzağı sayısı verilir
+            male_calf_income = float(removed_male_calves) * float(self.male_calf_price)
+        else:
+            # Normal hesaplama sırasında, satılabilir durumda olan buzağıları say
+            removable_male_calves = sum(1 for calf in self.calves 
+                if not calf.is_female and calf.age_months >= self.male_calf_removal_age)
+            male_calf_income = float(removable_male_calves) * float(self.male_calf_price)
         
-        # Toplam giderler
-        total_expenses = monthly_feed_cost + monthly_calf_feed_cost + self.other_expenses
+        # Toplam gelir = Süt geliri + Erkek buzağı satış geliri
+        total_income = milk_income + male_calf_income
+        
+        return total_income
+
+    def calculate_expenses(self, total_cows=None, total_calves=None):
+        """
+        Aylık gider hesaplama
+        Args:
+            total_cows (int, optional): Toplam inek sayısı (finansal güncelleme için)
+            total_calves (int, optional): Toplam buzağı sayısı (finansal güncelleme için)
+        Returns:
+            float: Toplam aylık gider
+        """
+        # 1. İnek yem giderleri
+        if total_cows is None:
+            total_cows = len(self.cows)
+        daily_feed_cost = float(total_cows) * float(self.feed_cost_per_cow)
+        monthly_feed_cost = daily_feed_cost * 30.0
+        
+        # 2. Buzağı yem giderleri
+        if total_calves is None:
+            total_calves = len(self.calves)
+        # Buzağı günlük yem maliyeti = Buzağı sayısı × (İnek yem maliyeti × Buzağı yem oranı)
+        daily_calf_feed_cost = float(total_calves) * (float(self.feed_cost_per_cow) * float(self.calf_feed_ratio))
+        monthly_calf_feed_cost = daily_calf_feed_cost * 30.0
+        
+        # 3. Yeni inek maliyetleri (öz kaynak seçiliyse)
+        new_cow_cost = 0.0
+        if self.cow_source_type == 'internal':
+            # Manuel eklenen inekler
+            new_cow_cost += float(self.monthly_new_cows) * float(self.new_cow_price)
+            
+            # Otomatik eklenen inekler (eğer aktifse)
+            if self.auto_add_cows:
+                female_calves = sum(1 for calf in self.calves if calf.is_female)
+                auto_add_count = min(
+                    female_calves // self.female_cow_threshold,
+                    self.max_auto_add_cows
+                )
+                new_cow_cost += float(auto_add_count) * float(self.new_cow_price)
+        
+        # 4. Diğer giderler (sabit giderler)
+        other_expenses = float(self.other_expenses)
+        
+        # Toplam gider = İnek yem gideri + Buzağı yem gideri + Yeni inek maliyeti + Diğer giderler
+        total_expenses = monthly_feed_cost + monthly_calf_feed_cost + new_cow_cost + other_expenses
         
         return total_expenses
 
@@ -216,10 +332,22 @@ class HerdManager:
         
         total_animals = len(self.cows) + len(self.calves)  # Toplam hayvan sayısı
         
+        # Sağmal oranı hesaplama (yüzde olarak)
+        milking_ratio = round((milking_cows / total_animals * 100) if total_animals > 0 else 0, 1)
+        
         # Gelir ve gider hesaplamaları
         income = self.calculate_income(milking_cows)
         expenses = self.calculate_expenses()
         profit = income - expenses
+        
+        # Otomatik eklenen inek sayısını hesapla
+        auto_added_cows = 0
+        if self.auto_add_cows:
+            female_calves_count = sum(1 for calf in self.calves if calf.is_female)
+            auto_added_cows = min(
+                female_calves_count // self.female_cow_threshold,
+                self.max_auto_add_cows
+            )
         
         return {
             'date': self.current_date.strftime('%Y-%m'),
@@ -231,15 +359,93 @@ class HerdManager:
             'male_calves': male_calves,
             'total_animals': total_animals,
             'total_removed_male_calves': self.total_removed_male_calves,
-            'income': round(income),  # Yuvarlanmış değerler
+            'milking_ratio': milking_ratio,
+            'income': round(income),
             'expenses': round(expenses),
-            'profit': round(profit)
+            'profit': round(profit),
+            'auto_added_cows': auto_added_cows  # Yeni eklenen alan
         }
+
+    def update_financials(self, milk_per_cow, milk_price, male_calf_price, feed_cost_per_cow, 
+                         calf_feed_ratio, other_expenses, cow_source_type='external', new_cow_price=75000):
+        """
+        Finansal parametreleri güncelle ve tüm ayların hesaplamalarını yeniden yap
+        Args:
+            milk_per_cow (float): İnek başına günlük süt üretimi (lt)
+            milk_price (float): Süt litre fiyatı (TL)
+            male_calf_price (float): Erkek buzağı satış fiyatı (TL)
+            feed_cost_per_cow (float): İnek başına günlük yem maliyeti (TL)
+            calf_feed_ratio (float): Buzağı yem oranı (0-1 arası)
+            other_expenses (float): Aylık diğer giderler (TL)
+            cow_source_type (str): İnek kaynağı ('external' veya 'internal')
+            new_cow_price (float): Yeni inek fiyatı (TL)
+        Returns:
+            list: Güncellenmiş aylık istatistikler
+        """
+        # 1. Finansal parametreleri güncelle
+        self.milk_per_cow = float(milk_per_cow)
+        self.milk_price = float(milk_price)
+        self.male_calf_price = float(male_calf_price)
+        self.feed_cost_per_cow = float(feed_cost_per_cow)
+        self.calf_feed_ratio = float(calf_feed_ratio)
+        self.other_expenses = float(other_expenses)
+        self.cow_source_type = cow_source_type
+        self.new_cow_price = float(new_cow_price)
+
+        # 2. Tüm ayların finansal verilerini güncelle
+        updated_stats = []
+        previous_removed_males = 0  # Önceki aya kadar satılan erkek buzağı sayısı
+        
+        for month_stat in self.monthly_stats:
+            # 2.1. Bu ay satılan erkek buzağı sayısını hesapla
+            current_removed_males = month_stat['total_removed_male_calves'] - previous_removed_males
+            previous_removed_males = month_stat['total_removed_male_calves']
+            
+            # 2.2. Gelir hesaplama
+            milking_cows = month_stat['milking_cows']
+            income = self.calculate_income(milking_cows, current_removed_males)
+            
+            # 2.3. Gider hesaplama
+            total_cows = month_stat['milking_cows'] + month_stat['dry_cows']
+            total_calves = month_stat['female_calves'] + month_stat['male_calves']
+            expenses = self.calculate_expenses(total_cows, total_calves)
+            
+            # 2.4. Kar/zarar hesaplama
+            profit = income - expenses
+
+            # 2.5. Ayın istatistiklerini güncelle
+            updated_month = month_stat.copy()
+            updated_month.update({
+                'income': round(income),
+                'expenses': round(expenses),
+                'profit': round(profit)
+            })
+            updated_stats.append(updated_month)
+
+        return updated_stats
 
 def main():
     # Get parameters from command line argument
     params = json.loads(sys.argv[1])
     
+    if len(sys.argv) > 2 and sys.argv[2] == "update_financials":
+        # Update financial parameters only
+        herd_state_base64 = params['herd_state']
+        herd_state_binary = base64.b64decode(herd_state_base64)  # base64'ten binary'ye çevir
+        herd = pickle.loads(herd_state_binary)  # binary'den nesneye çevir
+        results = herd.update_financials(
+            milk_per_cow=params['milk_per_cow'],
+            milk_price=params['milk_price'],
+            male_calf_price=params['male_calf_price'],
+            feed_cost_per_cow=params['feed_cost_per_cow'],
+            calf_feed_ratio=params['calf_feed_ratio'],
+            other_expenses=params['other_expenses'],
+            cow_source_type=params.get('cow_source_type', 'external'),  # Varsayılan değer: external
+            new_cow_price=params.get('new_cow_price', 75000)  # Varsayılan değer: 75000
+        )
+        print(json.dumps(results))
+        sys.exit(0)
+
     # Initialize herd manager with parameters
     herd = HerdManager(
         initial_cow_count=params['initial_cow_count'],
@@ -259,17 +465,27 @@ def main():
         feed_cost_per_cow=params['feed_cost_per_cow'],
         other_expenses=params['other_expenses'],
         male_calf_price=params['male_calf_price'],
-        calf_feed_ratio=params['calf_feed_ratio']
+        calf_feed_ratio=params['calf_feed_ratio'],
+        auto_add_cows=params.get('auto_add_cows', False),
+        female_cow_threshold=params.get('female_cow_threshold', 2),
+        max_auto_add_cows=params.get('max_auto_add_cows', 3),
+        cow_source_type=params.get('cow_source_type', 'external'),
+        new_cow_price=params.get('new_cow_price', 75000)
     )
     
     # Calculate results for specified number of months
-    results = []
     for _ in range(params['months']):
-        results.append(herd.get_statistics())
         herd.process_month()
+    
+    # Son sürü durumunu kaydet ve sonuçlara ekle
+    herd_state = {
+        'herd_state': base64.b64encode(pickle.dumps(herd)).decode('utf-8')
+    }
+    results = herd.monthly_stats.copy()
+    results.append(herd_state)
     
     # Print results as JSON
     print(json.dumps(results))
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main() 

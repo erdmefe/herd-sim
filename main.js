@@ -4,6 +4,7 @@ const { spawn } = require('child_process');
 
 let mainWindow;
 let lastCalculationParams = null;  // Son hesaplama parametrelerini saklayacak değişken
+let lastHerdState = null;  // Son sürü durumunu saklayacak değişken
 
 function createWindow() {
     mainWindow = new BrowserWindow({
@@ -55,37 +56,46 @@ ipcMain.on('close-window', () => {
 
 // Hesaplama sonuçlarını sıfırlama handler'ı
 ipcMain.on('reset-calculations', () => {
-    lastCalculationParams = null;  // Son hesaplama parametrelerini sıfırla
+    lastCalculationParams = null;
+    lastHerdState = null;
 });
 
 ipcMain.on('calculate-herd', (event, params) => {
-    lastCalculationParams = params;  // Parametreleri sakla
-    calculateHerd(params, event);
+    lastCalculationParams = params;  // Son parametreleri sakla
+    calculateHerd(params, event, true);  // true = save state
 });
 
 ipcMain.on('update-financials', (event, financialParams) => {
-    if (!lastCalculationParams) {
+    if (!lastCalculationParams || !lastHerdState) {
         event.reply('calculation-error', 'Önce bir hesaplama yapmalısınız!');
         return;
     }
 
     // Sadece finansal parametreleri güncelle
     const updatedParams = {
-        ...lastCalculationParams,
+        herd_state: Buffer.from(lastHerdState, 'binary').toString('base64'),  // Binary'den base64'e çevir
         milk_per_cow: financialParams.milk_per_cow,
         milk_price: financialParams.milk_price,
         male_calf_price: financialParams.male_calf_price,
         feed_cost_per_cow: financialParams.feed_cost_per_cow,
         calf_feed_ratio: financialParams.calf_feed_ratio,
-        other_expenses: financialParams.other_expenses
+        other_expenses: financialParams.other_expenses,
+        // Yeni inek parametreleri
+        cow_source_type: financialParams.cow_source_type,
+        new_cow_price: financialParams.new_cow_price
     };
 
     // Hesaplamayı yeni finansal parametrelerle tekrarla
-    calculateHerd(updatedParams, event);
+    calculateHerd(updatedParams, event, false, true);  // false = don't save state, true = update financials
 });
 
-function calculateHerd(params, event) {
-    const pythonProcess = spawn('python', ['herd_calculator.py', JSON.stringify(params)]);
+function calculateHerd(params, event, saveState = false, updateFinancials = false) {
+    const pythonArgs = ['herd_calculator.py', JSON.stringify(params)];
+    if (updateFinancials) {
+        pythonArgs.push('update_financials');
+    }
+    
+    const pythonProcess = spawn('python', pythonArgs);
     let result = '';
     let error = '';
 
@@ -105,6 +115,10 @@ function calculateHerd(params, event) {
 
         try {
             const calculationResults = JSON.parse(result);
+            if (saveState) {
+                // Son sürü durumunu sakla
+                lastHerdState = Buffer.from(calculationResults.pop().herd_state, 'base64').toString('binary');
+            }
             event.reply('calculation-results', calculationResults);
         } catch (e) {
             event.reply('calculation-error', 'Sonuçlar işlenirken bir hata oluştu.');
