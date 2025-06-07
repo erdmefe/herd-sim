@@ -1290,13 +1290,10 @@ Not: Pozitif değerler yeşil, negatif değerler kırmızı renkte gösterilir."
                     document.getElementById('autoAddCows').checked = defaults.autoAddCows;
                     document.getElementById('femaleCowThreshold').value = defaults.femaleCowThreshold;
                     document.getElementById('maxAutoAddCows').value = defaults.maxAutoAddCows;
-                    document.getElementById('cowSourceType').value = defaults.cowSourceType || 'external';
-                    document.getElementById('newCowPrice').value = defaults.newCowPrice || '75000';
-
-                    // Genel parametreler
-                    document.getElementById('startYear').value = defaults.startYear;
-                    document.getElementById('startMonth').value = defaults.startMonth;
+                    document.getElementById('cowSourceType').value = defaults.cowSourceType;
+                    document.getElementById('newCowPrice').value = defaults.newCowPrice;
                     document.getElementById('months').value = defaults.months;
+                    document.getElementById('summaryPeriod').value = defaults.summaryPeriod || '6';
                     document.getElementById('milkingThreshold').value = defaults.milkingThreshold;
                     document.getElementById('calfMaturityAge').value = defaults.calfMaturityAge;
                     document.getElementById('maleCalfRemovalAge').value = defaults.maleCalfRemovalAge;
@@ -1335,11 +1332,8 @@ Not: Pozitif değerler yeşil, negatif değerler kırmızı renkte gösterilir."
                     maxAutoAddCows: document.getElementById('maxAutoAddCows').value,
                     cowSourceType: document.getElementById('cowSourceType').value,
                     newCowPrice: document.getElementById('newCowPrice').value,
-
-                    // Genel parametreler
-                    startYear: document.getElementById('startYear').value,
-                    startMonth: document.getElementById('startMonth').value,
                     months: document.getElementById('months').value,
+                    summaryPeriod: document.getElementById('summaryPeriod').value,
                     milkingThreshold: document.getElementById('milkingThreshold').value,
                     calfMaturityAge: document.getElementById('calfMaturityAge').value,
                     maleCalfRemovalAge: document.getElementById('maleCalfRemovalAge').value,

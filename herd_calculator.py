@@ -335,8 +335,15 @@ class HerdManager:
         # Sağmal oranı hesaplama (yüzde olarak)
         milking_ratio = round((milking_cows / total_animals * 100) if total_animals > 0 else 0, 1)
         
-        # Gelir ve gider hesaplamaları
-        income = self.calculate_income(milking_cows)
+        # Bu ay satılan erkek buzağı sayısını hesapla
+        if not self.monthly_stats:  # İlk ay
+            previous_removed_males = 0
+        else:
+            previous_removed_males = self.monthly_stats[-1]['total_removed_male_calves']
+        current_removed_males = self.total_removed_male_calves - previous_removed_males
+        
+        # Gelir ve gider hesaplamaları (satılan erkek buzağıları da dahil et)
+        income = self.calculate_income(milking_cows, current_removed_males)
         expenses = self.calculate_expenses()
         profit = income - expenses
         

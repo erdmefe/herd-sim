@@ -65,4 +65,10 @@ npm start
 
 ---
 
+Eklenecekler
+-Rastgele inek ve buzağ ölüm oranı
+-yaşlı ineklerin satış opsiyonu
+-daha detaylı girdi opsiyonları
+
+
 MIT Lisansı ile lisanslanmıştır. | Licensed under MIT License.
