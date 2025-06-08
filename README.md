@@ -69,6 +69,8 @@ Eklenecekler
 -Rastgele inek ve buzağ ölüm oranı
 -yaşlı ineklerin satış opsiyonu
 -daha detaylı girdi opsiyonları
-
+-kararlılıkta iyileştirmeler
+-inek sayısına oranla işçi gideri ekleme
+-varsayılan değerler profili kaydetme
 
 MIT Lisansı ile lisanslanmıştır. | Licensed under MIT License.

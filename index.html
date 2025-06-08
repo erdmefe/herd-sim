@@ -808,6 +808,30 @@
                                         <span class="input-group-text">%</span>
                                     </div>
                                 </div>
+                                <div class="col-6">
+                                    <label class="form-label">Sürü Büyüklük Limiti
+                                        <i class="bi bi-question-circle-fill text-muted" 
+                                           data-bs-toggle="tooltip" 
+                                           data-bs-placement="top" 
+                                           title="Maksimum sürü büyüklüğü. Bu sayıya ulaşıldığında en yaşlı inekler satılır. Boş bırakılırsa limit uygulanmaz."></i>
+                                    </label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" class="form-control" id="herdSizeLimit" min="1" step="1">
+                                        <span class="input-group-text">adet</span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">Yaşlı İnek Satış Fiyatı
+                                        <i class="bi bi-question-circle-fill text-muted" 
+                                           data-bs-toggle="tooltip" 
+                                           data-bs-placement="top" 
+                                           title="Sürü limiti aşıldığında satılacak yaşlı ineklerin satış fiyatı."></i>
+                                    </label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" class="form-control" id="oldCowPrice" value="50000" min="0" step="1000">
+                                        <span class="input-group-text">₺</span>
+                                    </div>
+                                </div>
                                 <div class="col-12">
                                     <label class="form-label">Diğer Giderler</label>
                                     <div class="input-group input-group-sm">
@@ -1059,7 +1083,10 @@ Not: Pozitif değerler yeşil, negatif değerler kırmızı renkte gösterilir."
                     other_expenses: parseFloat(document.getElementById('otherExpenses').value),
                     // Yeni inek parametreleri
                     cow_source_type: document.getElementById('cowSourceType').value,
-                    new_cow_price: parseFloat(document.getElementById('newCowPrice').value)
+                    new_cow_price: parseFloat(document.getElementById('newCowPrice').value),
+                    // Sürü limiti parametreleri
+                    herd_size_limit: document.getElementById('herdSizeLimit').value ? parseInt(document.getElementById('herdSizeLimit').value) : null,
+                    old_cow_price: parseFloat(document.getElementById('oldCowPrice').value)
                 };
 
                 // Input validation
@@ -1112,7 +1139,10 @@ Not: Pozitif değerler yeşil, negatif değerler kırmızı renkte gösterilir."
                     max_auto_add_cows: parseInt(document.getElementById('maxAutoAddCows').value),
                     // Yeni inek parametreleri
                     cow_source_type: document.getElementById('cowSourceType').value,
-                    new_cow_price: parseFloat(document.getElementById('newCowPrice').value)
+                    new_cow_price: parseFloat(document.getElementById('newCowPrice').value),
+                    // Sürü limiti parametreleri
+                    herd_size_limit: document.getElementById('herdSizeLimit').value ? parseInt(document.getElementById('herdSizeLimit').value) : null,
+                    old_cow_price: parseFloat(document.getElementById('oldCowPrice').value)
                 };
 
                 // Input validation
@@ -1175,7 +1205,7 @@ Not: Pozitif değerler yeşil, negatif değerler kırmızı renkte gösterilir."
                         <td>${month.pregnant_heifers} / ${month.pregnant_cows}</td>
                         <td>${month.female_calves}</td>
                         <td>${month.male_calves} / ${month.total_removed_male_calves}</td>
-                        <td>${month.total_animals}</td>
+                        <td>${month.total_animals} ${month.current_removed_old_cows > 0 ? `(-${month.current_removed_old_cows})` : ''}</td>
                         <td>${month.income.toLocaleString('tr-TR')} ₺ / ${month.expenses.toLocaleString('tr-TR')} ₺</td>
                         <td class="${month.profit >= 0 ? 'text-success' : 'text-danger'}">${month.profit.toLocaleString('tr-TR')} ₺</td>
                     `;
@@ -1300,18 +1330,16 @@ Not: Pozitif değerler yeşil, negatif değerler kırmızı renkte gösterilir."
                     document.getElementById('birthSuccessRate').value = defaults.birthSuccessRate;
                     document.getElementById('postBirthWait').value = defaults.postBirthWait;
                     document.getElementById('useFemaleSeed').checked = defaults.useFemaleSeed;
-
-                    // Gelir/Gider parametreleri
+                    document.getElementById('startYear').value = defaults.startYear;
+                    document.getElementById('startMonth').value = defaults.startMonth;
                     document.getElementById('milkPerCow').value = defaults.milkPerCow;
                     document.getElementById('milkPrice').value = defaults.milkPrice;
                     document.getElementById('maleCalf').value = defaults.maleCalf;
                     document.getElementById('feedCostPerCow').value = defaults.feedCostPerCow;
                     document.getElementById('calfFeedRatio').value = defaults.calfFeedRatio;
                     document.getElementById('otherExpenses').value = defaults.otherExpenses;
-
-                    // Input'ları aktif/pasif durumlarını düzenleme
-                    document.getElementById('initialPregnancyMonth').disabled = defaults.randomInitialPregnancy;
-                    document.getElementById('newCowPregnancyMonth').disabled = defaults.randomMonthlyPregnancy;
+                    document.getElementById('herdSizeLimit').value = defaults.herdSizeLimit || '';
+                    document.getElementById('oldCowPrice').value = defaults.oldCowPrice || '50000';
                 }
                 // Varsayılan değerler yüklendikten sonra inek fiyatı input durumunu güncelle
                 updateNewCowPriceInput();
@@ -1340,14 +1368,18 @@ Not: Pozitif değerler yeşil, negatif değerler kırmızı renkte gösterilir."
                     birthSuccessRate: document.getElementById('birthSuccessRate').value,
                     postBirthWait: document.getElementById('postBirthWait').value,
                     useFemaleSeed: document.getElementById('useFemaleSeed').checked,
-
+                    startYear: document.getElementById('startYear').value,
+                    startMonth: document.getElementById('startMonth').value,
                     // Gelir/Gider parametreleri
                     milkPerCow: document.getElementById('milkPerCow').value,
                     milkPrice: document.getElementById('milkPrice').value,
                     maleCalf: document.getElementById('maleCalf').value,
                     feedCostPerCow: document.getElementById('feedCostPerCow').value,
                     calfFeedRatio: document.getElementById('calfFeedRatio').value,
-                    otherExpenses: document.getElementById('otherExpenses').value
+                    otherExpenses: document.getElementById('otherExpenses').value,
+                    // Sürü limiti parametreleri
+                    herdSizeLimit: document.getElementById('herdSizeLimit').value,
+                    oldCowPrice: document.getElementById('oldCowPrice').value
                 };
 
                 localStorage.setItem('herdSimDefaults', JSON.stringify(defaults));

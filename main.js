@@ -82,7 +82,10 @@ ipcMain.on('update-financials', (event, financialParams) => {
         other_expenses: financialParams.other_expenses,
         // Yeni inek parametreleri
         cow_source_type: financialParams.cow_source_type,
-        new_cow_price: financialParams.new_cow_price
+        new_cow_price: financialParams.new_cow_price,
+        // Sürü limiti parametreleri
+        herd_size_limit: financialParams.herd_size_limit,
+        old_cow_price: financialParams.old_cow_price
     };
 
     // Hesaplamayı yeni finansal parametrelerle tekrarla
