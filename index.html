@@ -2,9 +2,10 @@
 <html lang="tr" data-bs-theme="light">
 <head>
     <meta charset="UTF-8">
-    <title>Süt İnekçiliği Sürü Hesaplayıcı</title>
+    <title>HerdSIM</title>
     <link href="node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
     <style>
         :root {
             --titlebar-bg: #f8f9fa;
@@ -53,7 +54,7 @@
         .theme-switch .form-check-label { cursor: pointer; display: flex; align-items: center; color: var(--titlebar-color); }
         .theme-switch .form-check-label i { font-size: 0.9rem; }
 
-        /* Yeni Ana Yerleşim */
+        /* Ana Yerleşim */
         .app-container {
             margin-top: 32px;
             display: flex;
@@ -63,9 +64,9 @@
 
         /* Parametreler Kenar Çubuğu */
         .parameters-sidebar {
-            flex: 0 0 25%; /* Genişlik %25'e düşürüldü */
-            max-width: 25%; /* Genişlik %25'e düşürüldü */
-            min-width: 380px; /* Kenar çubuğunun çok daralmasını engeller */
+            flex: 0 0 25%;
+            max-width: 25%;
+            min-width: 380px;
             background-color: var(--sidebar-bg);
             border-right: 1px solid var(--sidebar-border);
             display: flex;
@@ -93,70 +94,23 @@
         }
 
         /* Akordiyon Stilleri */
-        .accordion-item {
-            background-color: transparent;
-            border: 1px solid var(--bs-border-color);
-        }
-        .accordion-button {
-            font-weight: 600;
-            font-size: 0.9rem;
-            gap: 0.75rem;
-        }
-        .accordion-button:not(.collapsed) {
-            background-color: rgba(var(--bs-primary-rgb), 0.1);
-            color: var(--bs-body-color);
-        }
-        .accordion-body {
-            padding: 1rem;
-        }
-        .accordion-button:focus {
-            box-shadow: none;
-        }
-        .accordion-button::after {
-            flex-shrink: 0;
-            width: 1rem;
-            height: 1rem;
-            margin-left: auto;
-            content: "";
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23212529'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
-            background-repeat: no-repeat;
-            background-size: 1rem;
-            transition: transform .2s ease-in-out;
-        }
-        [data-bs-theme="dark"] .accordion-button::after {
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ffffff'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
-        }
-        .accordion-button:not(.collapsed)::after {
-            transform: rotate(-180deg);
-        }
-        .section-divider {
-            margin: 1.2rem 0;
-            border-color: rgba(var(--bs-body-color-rgb), 0.2);
-        }
+        .accordion-item { background-color: transparent; border: 1px solid var(--bs-border-color); }
+        .accordion-button { font-weight: 600; font-size: 0.9rem; gap: 0.75rem; }
+        .accordion-button:not(.collapsed) { background-color: rgba(var(--bs-primary-rgb), 0.1); color: var(--bs-body-color); }
+        .accordion-body { padding: 1rem; }
+        .accordion-button:focus { box-shadow: none; }
+        .accordion-button::after { flex-shrink: 0; width: 1rem; height: 1rem; margin-left: auto; content: ""; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23212529'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e"); background-repeat: no-repeat; background-size: 1rem; transition: transform .2s ease-in-out; }
+        [data-bs-theme="dark"] .accordion-button::after { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ffffff'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e"); }
+        .accordion-button:not(.collapsed)::after { transform: rotate(-180deg); }
+        .section-divider { margin: 1.2rem 0; border-color: rgba(var(--bs-body-color-rgb), 0.2); }
 
         /* Sonuçlar Alanı */
-        .results-container {
-            flex: 1;
-            padding: 1rem;
-            overflow-y: auto;
-        }
-        .results-card {
-            height: 100%;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-        }
-        .results-card .card-body {
-            padding: 0;
-            flex: 1;
-        }
-        .table-responsive {
-            height: 100%;
-            overflow: auto;
-        }
-        .table thead th {
-            position: sticky; top: 0; background: var(--bs-body-bg); z-index: 1;
-        }
+        .results-container { flex: 1; padding: 1rem; overflow-y: auto; display: flex; flex-direction: column;}
+        .results-card { height: 100%; margin: 0; display: flex; flex-direction: column; flex-grow: 1; }
+        .results-card .card-header { padding: 0.5rem 1rem; background-color: var(--sidebar-bg); border-bottom: 1px solid var(--sidebar-border); display: flex; justify-content: space-between; align-items: center; }
+        .results-card .card-body { padding: 0; flex: 1; }
+        .table-responsive { height: 100%; overflow: auto; }
+        .table thead th { position: sticky; top: 0; background: var(--bs-body-bg); z-index: 1; }
 
         /* Form Elemanları */
         .form-label { font-weight: 500; font-size: 0.85rem; margin-bottom: 0.2rem; }
@@ -164,8 +118,9 @@
         .input-group-sm > .form-control, .input-group-sm > .input-group-text { padding: 0.25rem 0.5rem; font-size: 0.85rem; }
         .form-check { font-size: 0.8rem; padding-top: 0.25rem; }
         .form-check-input { margin-top: 0.2rem; }
+        .input-group .btn { padding-top: var(--bs-form-select-padding-y); padding-bottom: var(--bs-form-select-padding-y); line-height: var(--bs-body-line-height); }
 
-        /* Progress bar stilleri (değişiklik yok) */
+        /* Progress bar stilleri */
         .ratio-progress { height: 24px; position: relative; background: rgba(0,0,0,0.05); border-radius: 4px; overflow: hidden; margin: 2px 0; }
         [data-bs-theme="dark"] .ratio-progress { background: rgba(255,255,255,0.05); }
         .ratio-progress .progress-bar { position: absolute; height: 100%; transition: width 0.3s ease; opacity: 0.8; }
@@ -175,10 +130,10 @@
         .ratio-progress .progress-bar.good { background: linear-gradient(90deg, #17a2b8, #1fc8e3); }
         .ratio-progress .progress-bar.average { background: linear-gradient(90deg, #ffc107, #ffcd39); }
         .ratio-progress .progress-bar.poor { background: linear-gradient(90deg, #dc3545, #e4606d); }
-        .table td .ratio-progress { min-width: 120px; margin: -0.3rem 0; }
+        .table td .ratio-progress { min-width: 120px; /* margin: -0.3rem 0; > Bu kural artık gereksiz olabilir */ }
 
-        /* Alert stilleri (değişiklik yok) */
-        .alert-container { position: fixed; top: 45px; left: 50%; transform: translateX(-50%); z-index: 1050; width: 100%; max-width: 500px; display: flex; flex-direction: column; align-items: center; pointer-events: none; }
+        /* Alert stilleri */
+        .alert-container { position: fixed; top: 45px; left: 50%; transform: translateX(-50%); z-index: 1060; width: 100%; max-width: 500px; display: flex; flex-direction: column; align-items: center; pointer-events: none; }
         .custom-alert { padding: 0.75rem 1rem; margin-bottom: 0.5rem; border: 1px solid transparent; border-radius: 6px; font-size: 0.875rem; display: flex; align-items: center; justify-content: space-between; opacity: 0; transform: translateY(-20px); transition: all 0.3s ease; background-color: var(--bs-body-bg); box-shadow: 0 2px 8px rgba(0,0,0,0.15); width: 100%; pointer-events: auto; }
         .custom-alert.show { opacity: 1; transform: translateY(0); }
         .custom-alert.alert-success { border-left: 4px solid var(--bs-success); }
@@ -187,13 +142,25 @@
         .custom-alert .alert-content { display: flex; align-items: center; gap: 0.5rem; }
         .custom-alert .close-btn { background: none; border: none; padding: 0; margin-left: 1rem; cursor: pointer; color: inherit; opacity: 0.7; }
         .custom-alert .close-btn:hover { opacity: 1; }
+
+        /* Tablo Görsel İyileştirmeleri */
+        .table-success-light { background-color: rgba(var(--bs-success-rgb), 0.1) !important; }
+        .table-danger-light { background-color: rgba(var(--bs-danger-rgb), 0.08) !important; }
+        /* DÜZELTME: Özet satırı çerçevesi için kural güncellendi */
+        .table .summary-row td {
+             border-top: 2px solid var(--bs-border-color);
+        }
+        /* YENİ: Dikey ortalama için kural */
+        .td-vertical-middle {
+            vertical-align: middle;
+        }
     </style>
 </head>
 <body>
     <div class="titlebar">
         <div class="titlebar-left">
             <svg class="titlebar-icon" viewBox="0 0 24 24"><use href="assets/icon.svg#icon"></use></svg>
-            <div class="titlebar-title">Süt İnekçiliği Sürü Hesaplayıcı</div>
+            <div class="titlebar-title">HerdSIM</div>
         </div>
         <div class="titlebar-right">
             <div class="theme-switch">
@@ -229,14 +196,14 @@
                                     <div class="row g-2">
                                         <div class="col-6"><label class="form-label">Başlangıç Yılı</label><select class="form-select form-select-sm" id="startYear"><option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected>2026</option><option value="2027">2027</option><option value="2028">2028</option><option value="2029">2029</option><option value="2030">2030</option></select></div>
                                         <div class="col-6"><label class="form-label">Başlangıç Ayı</label><select class="form-select form-select-sm" id="startMonth"><option value="1">Ocak</option><option value="2">Şubat</option><option value="3">Mart</option><option value="4">Nisan</option><option value="5">Mayıs</option><option value="6">Haziran</option><option value="7">Temmuz</option><option value="8">Ağustos</option><option value="9" selected>Eylül</option><option value="10">Ekim</option><option value="11">Kasım</option><option value="12">Aralık</option></select></div>
-                                        <div class="col-6"><label class="form-label">Hesaplama Süresi</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="months" value="24" min="1"><span class="input-group-text">ay</span></div></div>
-                                        <div class="col-6"><label class="form-label">Toplam Periyodu</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="summaryPeriod" value="6" min="1"><span class="input-group-text">ay</span></div></div>
-                                        <div class="col-6"><label class="form-label">Başlangıç Sayısı</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="initialCowCount" value="10" min="1"><span class="input-group-text">adet</span></div></div>
-                                        <div class="col-6"><label class="form-label">Başlangıç Gebelik Ayı</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="initialPregnancyMonth" value="6" min="1" max="9"><span class="input-group-text">ay</span></div></div>
-                                        <div class="col-12"><div class="form-check"><input type="checkbox" class="form-check-input" id="randomInitialPregnancy"><label class="form-check-label" for="randomInitialPregnancy">Rastgele Gebelik Ayı</label></div></div>
+                                        <div class="col-6"><label class="form-label" data-bs-toggle="tooltip" title="Simülasyonun toplam kaç ay süreceği">Süre</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="months" value="24" min="1"><span class="input-group-text">ay</span></div></div>
+                                        <div class="col-6"><label class="form-label" data-bs-toggle="tooltip" title="Sonuç tablosundaki özet satırlarının hangi periyotta gösterileceği">Özet Periyodu</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="summaryPeriod" value="6" min="1"><span class="input-group-text">ay</span></div></div>
+                                        <div class="col-6"><label class="form-label" data-bs-toggle="tooltip" title="Simülasyon başlangıcındaki inek sayısı">Baş. Hayvan Sayısı</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="initialCowCount" value="10" min="1"><span class="input-group-text">adet</span></div></div>
+                                        <div class="col-6"><label class="form-label" data-bs-toggle="tooltip" title="Başlangıçtaki hayvanların gebelik ayı">Baş. Gebelik Ayı</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="initialPregnancyMonth" value="6" min="1" max="9"><span class="input-group-text">ay</span></div></div>
+                                        <div class="col-12"><div class="form-check"><input type="checkbox" class="form-check-input" id="randomInitialPregnancy"><label class="form-check-label" for="randomInitialPregnancy">Gebelik Ayını Rastgele Ata</label></div></div>
                                         <div class="col-12"><hr class="my-2"></div>
-                                        <div class="col-6"><label class="form-label">Sürü Büyüklük Limiti</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="herdSizeLimit" min="1" step="1" placeholder="Opsiyonel"><span class="input-group-text">adet</span></div></div>
-                                        <div class="col-6"><label class="form-label">Yaşlı İnek Satış Fiyatı</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="oldCowPrice" value="50000" min="0" step="1000"><span class="input-group-text">₺</span></div></div>
+                                        <div class="col-6"><label class="form-label" data-bs-toggle="tooltip" title="Sürü bu sayıya ulaştığında yaşlı inek satışı başlar (Opsiyonel)">Sürü Limiti</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="herdSizeLimit" min="1" step="1" placeholder="Opsiyonel"><span class="input-group-text">adet</span></div></div>
+                                        <div class="col-6"><label class="form-label" data-bs-toggle="tooltip" title="Sürü limiti aşıldığında satılan yaşlı ineklerin satış fiyatı">Yaşlı İnek Fiyatı</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="oldCowPrice" value="50000" min="0" step="1000"><span class="input-group-text">₺</span></div></div>
                                     </div>
                                 </div>
                             </div>
@@ -251,24 +218,24 @@
                             <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#parametersAccordion">
                                 <div class="accordion-body">
                                     <div class="row g-2">
-                                        <div class="col-6"><label class="form-label">Düve Yaşı (Sürüye Katılım)</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="calfMaturityAge" value="14" min="1"><span class="input-group-text">ay</span></div></div>
-                                        <div class="col-6"><label class="form-label">Doğum Sonrası Bekleme</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="postBirthWait" value="2" min="1"><span class="input-group-text">ay</span></div></div>
-                                        <div class="col-6"><label class="form-label">Kuruya Alma (Doğuma Kala)</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="milkingThreshold" value="2" min="0"><span class="input-group-text">ay</span></div></div>
-                                        <div class="col-6"><label class="form-label">Erkek Buzağı Satış Yaşı</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="maleCalfRemovalAge" value="6" min="1"><span class="input-group-text">ay</span></div></div>
+                                        <div class="col-6"><label class="form-label" data-bs-toggle="tooltip" title="Dişi buzağının sürüye inek olarak katılması için gereken yaş">Düve Olma Yaşı</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="calfMaturityAge" value="14" min="1"><span class="input-group-text">ay</span></div></div>
+                                        <div class="col-6"><label class="form-label" data-bs-toggle="tooltip" title="Doğum yapan bir ineğin yeniden gebe kalması için bekleme süresi">Doğum Sonrası Mola</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="postBirthWait" value="2" min="1"><span class="input-group-text">ay</span></div></div>
+                                        <div class="col-6"><label class="form-label" data-bs-toggle="tooltip" title="Doğuma ne kadar süre kala ineğin sağımdan kesilip dinlenmeye alınacağı">Kuruya Alma Süresi</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="milkingThreshold" value="2" min="0"><span class="input-group-text">ay</span></div></div>
+                                        <div class="col-6"><label class="form-label" data-bs-toggle="tooltip" title="Doğan erkek buzağıların kaç aylıkken satılacağı">Erkek Buzağı Satış</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="maleCalfRemovalAge" value="6" min="1"><span class="input-group-text">ay</span></div></div>
                                     </div>
                                     <hr class="section-divider">
                                     <div class="row g-2">
-                                        <div class="col-12"><div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="enableCowAddition" checked><label class="form-check-label" for="enableCowAddition">Yeni İnek Eklemeyi Etkinleştir</label></div></div>
-                                        <div class="col-6"><label class="form-label">Ekleme Sayısı</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="monthlyCows" value="1" min="0"><span class="input-group-text">adet</span></div></div>
-                                        <div class="col-6"><label class="form-label">Ekleme Frekansı</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="cowAdditionFrequency" value="1" min="1"><span class="input-group-text">ay</span></div></div>
-                                        <div class="col-6"><label class="form-label">Yeni İnek Gebelik Ayı</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="newCowPregnancyMonth" value="6" min="1" max="9"><span class="input-group-text">ay</span></div></div>
-                                        <div class="col-12"><div class="form-check"><input type="checkbox" class="form-check-input" id="randomMonthlyPregnancy"><label class="form-check-label" for="randomMonthlyPregnancy">Rastgele Gebelik Ayı</label></div></div>
+                                        <div class="col-12"><div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="enableCowAddition" checked><label class="form-check-label" for="enableCowAddition">Periyodik İnek Ekle</label></div></div>
+                                        <div class="col-6"><label class="form-label">Eklenecek Sayı</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="monthlyCows" value="1" min="0"><span class="input-group-text">adet</span></div></div>
+                                        <div class="col-6"><label class="form-label">Ekleme Sıklığı</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="cowAdditionFrequency" value="1" min="1"><span class="input-group-text">ay</span></div></div>
+                                        <div class="col-6"><label class="form-label" data-bs-toggle="tooltip" title="Yeni eklenen ineklerin gebelik ayı">Yeni İnek Gebelik</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="newCowPregnancyMonth" value="6" min="1" max="9"><span class="input-group-text">ay</span></div></div>
+                                        <div class="col-12"><div class="form-check"><input type="checkbox" class="form-check-input" id="randomMonthlyPregnancy"><label class="form-check-label" for="randomMonthlyPregnancy">Gebelik Ayını Rastgele Ata</label></div></div>
                                     </div>
                                     <hr class="section-divider">
                                     <div class="row g-2">
-                                        <div class="col-12"><div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="autoAddCows"><label class="form-check-label" for="autoAddCows">Buzağıdan Otomatik İnek Ekle</label></div></div>
-                                        <div class="col-6"><label class="form-label">Gerekli Dişi Buzağı</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="femaleCowThreshold" value="2" min="1"><span class="input-group-text">adet</span></div></div>
-                                        <div class="col-6"><label class="form-label">Aylık Maks. Ekleme</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="maxAutoAddCows" value="3" min="1"><span class="input-group-text">adet</span></div></div>
+                                        <div class="col-12"><div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="autoAddCows"><label class="form-check-label" for="autoAddCows">Buzağıdan Otomatik Ekle</label></div></div>
+                                        <div class="col-6"><label class="form-label" data-bs-toggle="tooltip" title="Otomatik ekleme için gereken dişi buzağı sayısı">Gerekli Buzağı</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="femaleCowThreshold" value="2" min="1"><span class="input-group-text">adet</span></div></div>
+                                        <div class="col-6"><label class="form-label" data-bs-toggle="tooltip" title="Bir ay içinde buzağıdan sürüye eklenebilecek maksimum hayvan sayısı">Aylık Maks. Ekleme</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="maxAutoAddCows" value="3" min="1"><span class="input-group-text">adet</span></div></div>
                                     </div>
                                 </div>
                             </div>
@@ -283,25 +250,25 @@
                             <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#parametersAccordion">
                                 <div class="accordion-body">
                                     <div class="row g-2">
-                                        <div class="col-6"><label class="form-label">Günlük Süt (İnek Başına)</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="milkPerCow" value="25" min="1" step="0.1"><span class="input-group-text">lt</span></div></div>
-                                        <div class="col-6"><label class="form-label">Süt Fiyatı (Litre)</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="milkPrice" value="21" min="0" step="0.01"><span class="input-group-text">₺</span></div></div>
-                                        <div class="col-6"><label class="form-label">Günlük Yem (İnek Başına)</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="feedCostPerCow" value="150" min="0" step="0.01"><span class="input-group-text">₺</span></div></div>
-                                        <div class="col-6"><label class="form-label">Buzağı Yem Oranı</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="calfFeedRatio" value="20" min="0" max="100" step="1"><span class="input-group-text">%</span></div></div>
-                                        <div class="col-6"><label class="form-label">Erkek Buzağı Satış Fiyatı</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="maleCalf" value="15000" min="0" step="1"><span class="input-group-text">₺</span></div></div>
-                                        <div class="col-6"><label class="form-label">Aylık Diğer Giderler</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="otherExpenses" value="25000" min="0" step="1"><span class="input-group-text">₺</span></div></div>
+                                        <div class="col-6"><label class="form-label">Günlük Süt/İnek</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="milkPerCow" value="25" min="1" step="0.1"><span class="input-group-text">lt</span></div></div>
+                                        <div class="col-6"><label class="form-label">Süt Fiyatı/Litre</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="milkPrice" value="21" min="0" step="0.01"><span class="input-group-text">₺</span></div></div>
+                                        <div class="col-6"><label class="form-label">Günlük Yem/İnek</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="feedCostPerCow" value="150" min="0" step="0.01"><span class="input-group-text">₺</span></div></div>
+                                        <div class="col-6"><label class="form-label" data-bs-toggle="tooltip" title="Buzağıların bir ineğe oranla yem tüketim yüzdesi">Buzağı Yem Oranı</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="calfFeedRatio" value="20" min="0" max="100" step="1"><span class="input-group-text">%</span></div></div>
+                                        <div class="col-6"><label class="form-label">Erkek Buzağı Fiyatı</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="maleCalf" value="15000" min="0" step="1"><span class="input-group-text">₺</span></div></div>
+                                        <div class="col-6"><label class="form-label">Aylık Diğer Gider</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="otherExpenses" value="25000" min="0" step="1"><span class="input-group-text">₺</span></div></div>
                                     </div>
                                     <hr class="section-divider">
                                     <div class="row g-2">
-                                        <div class="col-6"><label class="form-label">Çalışan Maaşı (Aylık)</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="staffSalary" value="15000" min="0" step="1"><span class="input-group-text">₺</span></div></div>
-                                        <div class="col-6"><label class="form-label">Çalışan (Hayvan Başına)</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="staffPerAnimal" value="30" min="1" step="1"><span class="input-group-text">adet</span></div></div>
+                                        <div class="col-6"><label class="form-label">Çalışan Maaşı</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="staffSalary" value="15000" min="0" step="1"><span class="input-group-text">₺</span></div></div>
+                                        <div class="col-6"><label class="form-label" data-bs-toggle="tooltip" title="Kaç hayvana bir çalışanın bakacağı">Çalışan/Hayvan</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="staffPerAnimal" value="30" min="1" step="1"><span class="input-group-text">adet</span></div></div>
                                     </div>
                                     <hr class="section-divider">
                                      <div class="row g-2">
-                                        <div class="col-6"><label class="form-label">Kaynak Tipi</label><select class="form-select form-select-sm" id="cowSourceType"><option value="external">Dış Kaynak</option><option value="internal">Öz Kaynak</option></select></div>
-                                        <div class="col-6"><label class="form-label">Yeni İnek Alış Fiyatı</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="newCowPrice" value="75000" min="0" step="1000"><span class="input-group-text">₺</span></div></div>
+                                        <div class="col-6"><label class="form-label" data-bs-toggle="tooltip" title="Sermayeden: Alış fiyatı giderlere yansıtılır. Harici: Alış fiyatı giderlere yansıtılmaz (hibe, vb.).">Alım Kaynağı</label><select class="form-select form-select-sm" id="cowSourceType"><option value="internal">Sermayeden (Gider)</option><option value="external">Harici (Gider Dışı)</option></select></div>
+                                        <div class="col-6"><label class="form-label" data-bs-toggle="tooltip" title="'Sermayeden (Gider)' seçildiğinde ineğin alış fiyatı">İnek Alış Fiyatı</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="newCowPrice" value="75000" min="0" step="1000"><span class="input-group-text">₺</span></div></div>
                                     </div>
                                     <div class="col-12 text-center mt-3">
-                                        <button type="button" class="btn btn-outline-primary btn-sm" id="updateFinancials"><i class="bi bi-arrow-clockwise"></i> Finansalları Güncelle</button>
+                                        <button type="button" class="btn btn-outline-primary btn-sm" id="updateFinancials" data-bs-toggle="tooltip" title="Tablodaki mevcut sonuçları sadece bu bölümdeki finansal değerlere göre yeniden hesaplar"><i class="bi bi-arrow-clockwise"></i> Finansalları Güncelle</button>
                                     </div>
                                 </div>
                             </div>
@@ -316,14 +283,14 @@
                             <div id="collapseFour" class="accordion-collapse collapse" data-bs-parent="#parametersAccordion">
                                 <div class="accordion-body">
                                     <div class="row g-2">
-                                        <div class="col-6"><label class="form-label">Doğum Başarı Oranı</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="birthSuccessRate" value="95" min="1" max="100"><span class="input-group-text">%</span></div></div>
-                                        <div class="col-12"><div class="form-check form-switch"><input type="checkbox" class="form-check-input" id="useFemaleSeed"><label class="form-check-label" for="useFemaleSeed">Dişi Sperm Kullanımı (%90 olasılık)</label></div></div>
+                                        <div class="col-6"><label class="form-label">Doğum Başarısı</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="birthSuccessRate" value="95" min="1" max="100"><span class="input-group-text">%</span></div></div>
+                                        <div class="col-12"><div class="form-check form-switch"><input type="checkbox" class="form-check-input" id="useFemaleSeed"><label class="form-check-label" for="useFemaleSeed" data-bs-toggle="tooltip" title="Buzağıların %90 dişi doğma olasılığını etkinleştirir">Dişi Odaklı Tohumlama</label></div></div>
                                     </div>
                                     <hr class="section-divider">
                                     <div class="row g-2">
-                                        <div class="col-12"><div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="enableDeaths"><label class="form-check-label" for="enableDeaths">Ölüm Oranlarını Etkinleştir</label></div></div>
-                                        <div class="col-6"><label class="form-label">Aylık İnek Ölüm Oranı</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="monthlyCowDeathRate" value="0.5" min="0" max="100" step="0.1"><span class="input-group-text">%</span></div></div>
-                                        <div class="col-6"><label class="form-label">Aylık Buzağı Ölüm Oranı</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="monthlyCalfDeathRate" value="0.5" min="0" max="100" step="0.1"><span class="input-group-text">%</span></div></div>
+                                        <div class="col-12"><div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="enableDeaths"><label class="form-check-label" for="enableDeaths">Ölüm Oranlarını Aktif Et</label></div></div>
+                                        <div class="col-6"><label class="form-label">İnek Ölüm Oranı</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="monthlyCowDeathRate" value="0.5" min="0" max="100" step="0.1"><span class="input-group-text">%</span></div></div>
+                                        <div class="col-6"><label class="form-label">Buzağı Ölüm Oranı</label><div class="input-group input-group-sm"><input type="number" class="form-control" id="monthlyCalfDeathRate" value="0.5" min="0" max="100" step="0.1"><span class="input-group-text">%</span></div></div>
                                     </div>
                                 </div>
                             </div>
@@ -332,38 +299,51 @@
                 </form>
             </div>
             <div class="sidebar-footer">
+                <div class="mb-3">
+                    <label for="profileSelector" class="form-label pt-0">Ayarlar Profili</label>
+                    <div class="input-group align-items-center">
+                        <select class="form-select" id="profileSelector"></select>
+                        <button class="btn btn-outline-danger" type="button" id="deleteProfileBtn" title="Seçili Profili Sil"><i class="bi bi-trash"></i></button>
+                    </div>
+                </div>
                 <div class="d-grid gap-2">
                     <button type="submit" form="calculatorForm" class="btn btn-primary"><i class="bi bi-calculator"></i> Hesapla</button>
                     <div class="btn-group">
-                        <button type="button" class="btn btn-danger" id="resetTableBtn"><i class="bi bi-trash"></i> Temizle</button>
-                        <button type="button" class="btn btn-warning" id="resetInputsBtn"><i class="bi bi-arrow-counterclockwise"></i> Sıfırla</button>
-                        <button type="button" class="btn btn-success" id="saveDefaultsBtn"><i class="bi bi-save"></i> Kaydet</button>
+                        <button type="button" class="btn btn-warning" id="resetInputsBtn" title="Mevcut Profilin Kayıtlı Ayarlarını Geri Yükle"><i class="bi bi-arrow-counterclockwise"></i> Sıfırla</button>
+                        <button type="button" class="btn btn-success" id="saveProfileBtn" title="Mevcut Ayarları Profile Kaydet"><i class="bi bi-save"></i> Kaydet</button>
                     </div>
+                    <button type="button" class="btn btn-danger" id="resetTableBtn"><i class="bi bi-trash-fill"></i> Hesaplama Tablosunu Temizle</button>
                 </div>
             </div>
         </div>
 
         <div class="results-container">
             <div class="card results-card">
+                <div class="card-header">
+                    <h6 class="mb-0">Hesaplama Sonuçları</h6>
+                    <button id="exportPdfBtn" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-file-earmark-pdf"></i> PDF Olarak Dışa Aktar
+                    </button>
+                </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-sm table-hover">
+                        <table class="table table-sm table-hover table-striped">
                             <thead>
                                 <tr>
                                     <th>Tarih</th>
                                     <th>Sağmal/Kuru</th>
                                     <th>Sağmal Oranı</th>
                                     <th>Gebe Düve/İnek</th>
-                                    <th>Dişi Buzağı</th>
-                                    <th>Erkek Buzağı</th>
-                                    <th>Toplam Hayvan</th>
+                                    <th>D. Buzağı</th>
+                                    <th data-bs-toggle="tooltip" title="Mevcut Erkek Buzağı / Toplam Satılan Erkek Buzağı">E. Buzağı</th>
+                                    <th>Top. Hayvan</th>
                                     <th>Ölen İnek/Buzağı</th>
                                     <th>Gelir/Gider</th>
                                     <th>Kar/Zarar</th>
                                 </tr>
                             </thead>
                             <tbody id="resultsTable">
-                                </tbody>
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -372,75 +352,49 @@
     </div>
 
     <div class="alert-container"></div>
+    <div class="modal fade" id="saveProfileModal" tabindex="-1" aria-labelledby="saveProfileModalLabel" aria-hidden="true"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h1 class="modal-title fs-5" id="saveProfileModalLabel">Profili Kaydet</h1><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body"><form><div class="mb-3"><label for="profileNameInput" class="col-form-label">Profil Adı:</label><input type="text" class="form-control" id="profileNameInput"></div></form></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button><button type="button" class="btn btn-primary" id="modalSaveBtn">Kaydet</button></div></div></div></div>
+    <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h1 class="modal-title fs-5" id="deleteConfirmModalLabel">Profili Sil</h1><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body"><p>'<strong id="profileNameToDeleteSpan"></strong>' isimli profili silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.</p></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button><button type="button" class="btn btn-danger" id="modalDeleteBtn">Sil</button></div></div></div></div>
 
     <script src="node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Tüm JavaScript kodunuz burada...
-        // HİÇBİR DEĞİŞİKLİK GEREKMEZ
         const { ipcRenderer } = require('electron');
-        
+
+        let saveProfileModal;
+        let deleteConfirmModal;
+        let profileToDelete = null;
+
+        function toggleRelatedInputs(switchId, relatedIds, reverseLogic = false, parentSelector = '.col-6, .col-12') {
+            const switchEl = document.getElementById(switchId);
+            if (!switchEl) return;
+            const relatedElements = relatedIds.map(id => document.getElementById(id));
+            function updateState() {
+                const isDisabled = reverseLogic ? switchEl.checked : !switchEl.checked;
+                relatedElements.forEach(el => {
+                    if (el) {
+                        el.disabled = isDisabled;
+                        const parentContainer = el.closest(parentSelector) || el.closest('.form-check');
+                        if (parentContainer) {
+                            parentContainer.style.opacity = isDisabled ? '0.6' : '1';
+                            parentContainer.style.pointerEvents = isDisabled ? 'none' : 'auto';
+                        }
+                    }
+                });
+            }
+            switchEl.addEventListener('change', updateState);
+            updateState();
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
+            saveProfileModal = new bootstrap.Modal(document.getElementById('saveProfileModal'));
+            deleteConfirmModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+            const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+
             document.getElementById('minimizeBtn').addEventListener('click', () => { ipcRenderer.send('minimize-window'); });
             document.getElementById('maximizeBtn').addEventListener('click', () => { ipcRenderer.send('maximize-window'); });
             document.getElementById('closeBtn').addEventListener('click', () => { ipcRenderer.send('close-window'); });
 
-            loadSavedDefaults();
-            if (!localStorage.getItem('herdSimDefaults')) {
-                document.getElementById('cowSourceType').value = 'external';
-                updateNewCowPriceInput();
-            }
-
-            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-            [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
-
-            document.getElementById('resetTableBtn').addEventListener('click', () => {
-                const tbody = document.getElementById('resultsTable');
-                if (tbody.children.length > 0) {
-                    tbody.innerHTML = '';
-                    ipcRenderer.send('reset-calculations');
-                    showAlert('Hesaplama sonuçları sıfırlandı.', 'info');
-                } else {
-                    showAlert('Tablo zaten boş.', 'info');
-                }
-            });
-
-            document.getElementById('resetInputsBtn').addEventListener('click', () => {
-                const savedDefaults = localStorage.getItem('herdSimDefaults');
-                if (savedDefaults) {
-                    loadSavedDefaults();
-                    showAlert('Kaydedilmiş varsayılan değerlere dönüldü.', 'info');
-                } else {
-                    document.getElementById('initialCowCount').value = '10';
-                    document.getElementById('initialPregnancyMonth').value = '6';
-                    document.getElementById('randomInitialPregnancy').checked = false;
-                    document.getElementById('monthlyCows').value = '1';
-                    document.getElementById('newCowPregnancyMonth').value = '6';
-                    document.getElementById('randomMonthlyPregnancy').checked = false;
-                    document.getElementById('autoAddCows').checked = false;
-                    document.getElementById('femaleCowThreshold').value = '2';
-                    document.getElementById('maxAutoAddCows').value = '3';
-                    document.getElementById('enableCowAddition').checked = true;
-                    document.getElementById('cowAdditionFrequency').value = '1';
-                    document.getElementById('startYear').value = '2026';
-                    document.getElementById('startMonth').value = '9';
-                    document.getElementById('months').value = '24';
-                    document.getElementById('milkingThreshold').value = '2';
-                    document.getElementById('calfMaturityAge').value = '14';
-                    document.getElementById('maleCalfRemovalAge').value = '6';
-                    document.getElementById('birthSuccessRate').value = '95';
-                    document.getElementById('postBirthWait').value = '2';
-                    document.getElementById('useFemaleSeed').checked = false;
-                    document.getElementById('milkPerCow').value = '25';
-                    document.getElementById('milkPrice').value = '21';
-                    document.getElementById('maleCalf').value = '15000';
-                    document.getElementById('feedCostPerCow').value = '150';
-                    document.getElementById('calfFeedRatio').value = '20';
-                    document.getElementById('otherExpenses').value = '25000';
-                    document.getElementById('initialPregnancyMonth').disabled = false;
-                    document.getElementById('newCowPregnancyMonth').disabled = false;
-                    showAlert('Fabrika varsayılan değerlerine dönüldü.', 'info');
-                }
-            });
+            initializeProfileSystem();
 
             const themeSwitch = document.getElementById('themeSwitch');
             const html = document.documentElement;
@@ -454,269 +408,124 @@
                 html.setAttribute('data-bs-theme', theme);
                 localStorage.setItem('theme', theme);
             });
+            
+            document.getElementById('cowSourceType').addEventListener('change', updateNewCowPriceInput);
+            toggleRelatedInputs('enableCowAddition', ['monthlyCows', 'cowAdditionFrequency', 'newCowPregnancyMonth', 'randomMonthlyPregnancy'], false);
+            toggleRelatedInputs('autoAddCows', ['femaleCowThreshold', 'maxAutoAddCows'], false);
+            toggleRelatedInputs('enableDeaths', ['monthlyCowDeathRate', 'monthlyCalfDeathRate'], false);
+            toggleRelatedInputs('randomInitialPregnancy', ['initialPregnancyMonth'], true);
+            toggleRelatedInputs('randomMonthlyPregnancy', ['newCowPregnancyMonth'], true);
 
-            document.getElementById('randomInitialPregnancy').addEventListener('change', function() {
-                const input = document.getElementById('initialPregnancyMonth');
-                input.disabled = this.checked;
-                if (this.checked) { input.value = 'Rastgele'; } else { input.value = '6'; }
-            });
-
-            document.getElementById('randomMonthlyPregnancy').addEventListener('change', function() {
-                const input = document.getElementById('newCowPregnancyMonth');
-                input.disabled = this.checked;
-                if (this.checked) { input.value = 'Rastgele'; } else { input.value = '6'; }
-            });
-
-            function showAlert(message, type = 'info') {
-                const alertContainer = document.querySelector('.alert-container');
-                const alertElement = document.createElement('div');
-                alertElement.className = `custom-alert alert-${type}`;
-                alertElement.innerHTML = `<div class="alert-content"><i class="bi ${type === 'success' ? 'bi-check-circle' : 'bi-info-circle'}"></i><span>${message}</span></div><button type="button" class="close-btn" onclick="this.parentElement.remove()"><i class="bi bi-x"></i></button>`;
-                alertContainer.appendChild(alertElement);
-                setTimeout(() => alertElement.classList.add('show'), 10);
-                setTimeout(() => {
-                    alertElement.classList.remove('show');
-                    setTimeout(() => alertElement.remove(), 300);
-                }, 5000);
-            }
-
-            document.getElementById('updateFinancials').addEventListener('click', function() {
-                const financialParams = {
-                    milk_per_cow: parseFloat(document.getElementById('milkPerCow').value),
-                    milk_price: parseFloat(document.getElementById('milkPrice').value),
-                    male_calf_price: parseFloat(document.getElementById('maleCalf').value),
-                    feed_cost_per_cow: parseFloat(document.getElementById('feedCostPerCow').value),
-                    calf_feed_ratio: parseFloat(document.getElementById('calfFeedRatio').value) / 100,
-                    other_expenses: parseFloat(document.getElementById('otherExpenses').value),
-                    staff_salary: parseFloat(document.getElementById('staffSalary').value),
-                    staff_per_animal: parseInt(document.getElementById('staffPerAnimal').value),
-                    cow_source_type: document.getElementById('cowSourceType').value,
-                    new_cow_price: parseFloat(document.getElementById('newCowPrice').value),
-                    enable_cow_addition: document.getElementById('enableCowAddition').checked,
-                    cow_addition_frequency: parseInt(document.getElementById('cowAdditionFrequency').value),
-                    herd_size_limit: document.getElementById('herdSizeLimit').value ? parseInt(document.getElementById('herdSizeLimit').value) : null,
-                    old_cow_price: parseFloat(document.getElementById('oldCowPrice').value),
-                    enable_deaths: document.getElementById('enableDeaths').checked,
-                    monthly_cow_death_rate: parseFloat(document.getElementById('monthlyCowDeathRate').value),
-                    monthly_calf_death_rate: parseFloat(document.getElementById('monthlyCalfDeathRate').value)
-                };
-                for (let key in financialParams) {
-                    if (isNaN(financialParams[key]) && typeof financialParams[key] !== 'string' && financialParams[key] !== null) {
-                        showAlert('Lütfen tüm finansal değerleri doğru şekilde doldurun.', 'danger');
-                        return;
-                    }
+            const enableCowAdditionSwitch = document.getElementById('enableCowAddition');
+            enableCowAdditionSwitch.addEventListener('change', function() {
+                if(this.checked) {
+                    toggleRelatedInputs('randomMonthlyPregnancy', ['newCowPregnancyMonth'], true);
                 }
-                if (financialParams.calf_feed_ratio < 0 || financialParams.calf_feed_ratio > 1) {
-                    showAlert('Buzağı yem oranı 0-100 arasında olmalıdır.', 'danger');
+            });
+
+            document.getElementById('resetTableBtn').addEventListener('click', resetTable);
+            document.getElementById('calculatorForm').addEventListener('submit', runCalculation);
+            document.getElementById('updateFinancials').addEventListener('click', updateFinancials);
+            document.getElementById('saveProfileBtn').addEventListener('click', openSaveProfileModal);
+            document.getElementById('modalSaveBtn').addEventListener('click', executeSaveProfile);
+            document.getElementById('deleteProfileBtn').addEventListener('click', openDeleteConfirmModal);
+            document.getElementById('modalDeleteBtn').addEventListener('click', executeDeleteProfile); 
+            document.getElementById('resetInputsBtn').addEventListener('click', () => {
+                const selectedProfile = document.getElementById('profileSelector').value;
+                if (selectedProfile) { loadProfile(selectedProfile); showAlert(`'${selectedProfile}' profili yeniden yüklendi.`, 'info'); }
+            });
+            document.getElementById('profileSelector').addEventListener('change', (e) => loadProfile(e.target.value));
+
+            document.getElementById('exportPdfBtn').addEventListener('click', () => {
+                const tableBody = document.getElementById('resultsTable');
+                if (tableBody.rows.length === 0) {
+                    showAlert('Dışa aktarılacak veri bulunmuyor.', 'info');
                     return;
                 }
-                ipcRenderer.send('update-financials', financialParams);
+                const tableHTML = document.querySelector('.table-responsive').innerHTML;
+                const theme = document.documentElement.getAttribute('data-bs-theme');
+                const styles = Array.from(document.styleSheets).map(sheet => { try { return Array.from(sheet.cssRules).map(rule => rule.cssText).join(''); } catch (e) { return ''; } }).join('');
+                ipcRenderer.send('export-to-pdf', { body: tableHTML, styles: styles, theme: theme });
             });
 
-            document.getElementById('calculatorForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                const params = {
-                    initial_cow_count: parseInt(document.getElementById('initialCowCount').value),
-                    initial_pregnancy_month: document.getElementById('randomInitialPregnancy').checked ? 'random' : parseInt(document.getElementById('initialPregnancyMonth').value),
-                    monthly_new_cows: parseInt(document.getElementById('monthlyCows').value),
-                    new_cow_pregnancy_month: document.getElementById('randomMonthlyPregnancy').checked ? 'random' : parseInt(document.getElementById('newCowPregnancyMonth').value),
-                    months: parseInt(document.getElementById('months').value),
-                    milking_threshold: parseInt(document.getElementById('milkingThreshold').value),
-                    calf_maturity_age: parseInt(document.getElementById('calfMaturityAge').value),
-                    male_calf_removal_age: parseInt(document.getElementById('maleCalfRemovalAge').value),
-                    birth_success_rate: parseInt(document.getElementById('birthSuccessRate').value),
-                    post_birth_wait: parseInt(document.getElementById('postBirthWait').value),
-                    use_female_sperm: document.getElementById('useFemaleSeed').checked,
-                    start_year: parseInt(document.getElementById('startYear').value),
-                    start_month: parseInt(document.getElementById('startMonth').value),
-                    milk_per_cow: parseFloat(document.getElementById('milkPerCow').value),
-                    milk_price: parseFloat(document.getElementById('milkPrice').value),
-                    male_calf_price: parseFloat(document.getElementById('maleCalf').value),
-                    feed_cost_per_cow: parseFloat(document.getElementById('feedCostPerCow').value),
-                    calf_feed_ratio: parseFloat(document.getElementById('calfFeedRatio').value) / 100,
-                    other_expenses: parseFloat(document.getElementById('otherExpenses').value),
-                    staff_salary: parseFloat(document.getElementById('staffSalary').value),
-                    staff_per_animal: parseInt(document.getElementById('staffPerAnimal').value),
-                    auto_add_cows: document.getElementById('autoAddCows').checked,
-                    female_cow_threshold: parseInt(document.getElementById('femaleCowThreshold').value),
-                    max_auto_add_cows: parseInt(document.getElementById('maxAutoAddCows').value),
-                    cow_source_type: document.getElementById('cowSourceType').value,
-                    new_cow_price: parseFloat(document.getElementById('newCowPrice').value),
-                    enable_cow_addition: document.getElementById('enableCowAddition').checked,
-                    cow_addition_frequency: parseInt(document.getElementById('cowAdditionFrequency').value),
-                    herd_size_limit: document.getElementById('herdSizeLimit').value ? parseInt(document.getElementById('herdSizeLimit').value) : null,
-                    old_cow_price: parseFloat(document.getElementById('oldCowPrice').value),
-                    enable_deaths: document.getElementById('enableDeaths').checked,
-                    monthly_cow_death_rate: parseFloat(document.getElementById('monthlyCowDeathRate').value),
-                    monthly_calf_death_rate: parseFloat(document.getElementById('monthlyCalfDeathRate').value)
-                };
-                for (let key in params) {
-                    if (typeof params[key] === 'number' && isNaN(params[key]) && params[key] !== 'random' && params[key] !== null) {
-                        showAlert('Lütfen tüm alanları doğru şekilde doldurun.', 'danger');
-                        return;
-                    }
-                }
-                ipcRenderer.send('calculate-herd', params);
+            ipcRenderer.on('pdf-export-complete', (event, result) => {
+                if (result.success) { showAlert(`PDF başarıyla kaydedildi: ${result.path}`, 'success'); } 
+                else { showAlert(`PDF oluşturulurken bir hata oluştu: ${result.error}`, 'danger'); }
             });
-
-            function getRatioBarClass(ratio) {
-                if (ratio >= 80) return 'excellent';
-                if (ratio >= 70) return 'good';
-                if (ratio >= 60) return 'average';
-                return 'poor';
-            }
-            function createRatioProgressBar(ratio) {
-                const barClass = getRatioBarClass(ratio);
-                return `<div class="ratio-progress"><div class="progress-bar ${barClass}" style="width: ${ratio}%"></div><div class="progress-text">${ratio}%</div></div>`;
-            }
-
-            ipcRenderer.on('calculation-results', (event, results) => {
-                const tbody = document.getElementById('resultsTable');
-                tbody.innerHTML = '';
-                let periodIncome = 0, periodExpenses = 0, periodProfit = 0, totalIncome = 0, totalExpenses = 0, totalProfit = 0;
-                const summaryPeriod = parseInt(document.getElementById('summaryPeriod').value);
-                let monthCounter = 0;
-                let periodStartDate = '';
-                let totalDeadCows = 0;
-                let totalDeadCalves = 0;
-                results.forEach((month, index) => {
-                    if (monthCounter === 0) { periodStartDate = month.date; }
-                    totalDeadCows = month.total_dead_cows;
-                    totalDeadCalves = month.total_dead_calves;
-                    const row = document.createElement('tr');
-                    row.innerHTML = `<td>${month.date}</td><td>${month.milking_cows} / ${month.dry_cows}</td><td>${createRatioProgressBar(month.milking_ratio)}</td><td>${month.pregnant_heifers} / ${month.pregnant_cows}</td><td>${month.female_calves}</td><td>${month.male_calves} / ${month.total_removed_male_calves}</td><td>${month.total_animals} ${month.current_removed_old_cows > 0 ? `(-${month.current_removed_old_cows})` : ''}</td><td>${month.monthly_dead_cows} / ${month.monthly_dead_calves}</td><td>${month.income.toLocaleString('tr-TR')} ₺ / ${month.expenses.toLocaleString('tr-TR')} ₺</td><td class="${month.profit >= 0 ? 'text-success' : 'text-danger'}">${month.profit.toLocaleString('tr-TR')} ₺</td>`;
-                    tbody.appendChild(row);
-                    totalIncome += month.income;
-                    totalExpenses += month.expenses;
-                    totalProfit += month.profit;
-                    periodIncome += month.income;
-                    periodExpenses += month.expenses;
-                    periodProfit += month.profit;
-                    monthCounter++;
-                    if (monthCounter === summaryPeriod || index === results.length - 1) {
-                        if (monthCounter > 0) {
-                            const summaryRow = document.createElement('tr');
-                            summaryRow.className = 'table-secondary fw-bold';
-                            summaryRow.innerHTML = `<td colspan="7" class="text-end">${periodStartDate} - ${month.date} Dönemi Toplamları:</td><td>(${totalDeadCows}/${totalDeadCalves})</td><td>${periodIncome.toLocaleString('tr-TR')} ₺ / ${periodExpenses.toLocaleString('tr-TR')} ₺</td><td class="${periodProfit >= 0 ? 'text-success' : 'text-danger'}">${periodProfit.toLocaleString('tr-TR')} ₺</td>`;
-                            tbody.appendChild(summaryRow);
-                        }
-                        periodIncome = 0; periodExpenses = 0; periodProfit = 0; monthCounter = 0;
-                    }
-                });
-                const totalRow = document.createElement('tr');
-                totalRow.className = 'table-dark fw-bold';
-                totalRow.innerHTML = `<td colspan="7" class="text-end">Genel Toplam:</td><td>(${totalDeadCows}/${totalDeadCalves})</td><td>${totalIncome.toLocaleString('tr-TR')} ₺ / ${totalExpenses.toLocaleString('tr-TR')} ₺</td><td class="${totalProfit >= 0 ? 'text-success' : 'text-danger'}">${totalProfit.toLocaleString('tr-TR')} ₺</td>`;
-                tbody.appendChild(totalRow);
-                showAlert('Hesaplama başarıyla tamamlandı.', 'success');
-            });
-
-            ipcRenderer.on('calculation-error', (event, error) => { showAlert('Hesaplama sırasında bir hata oluştu: ' + error, 'danger'); });
-
-            function loadSavedDefaults() {
-                const savedDefaults = localStorage.getItem('herdSimDefaults');
-                if (savedDefaults) {
-                    const defaults = JSON.parse(savedDefaults);
-                    document.getElementById('initialCowCount').value = defaults.initialCowCount;
-                    document.getElementById('initialPregnancyMonth').value = defaults.initialPregnancyMonth;
-                    document.getElementById('randomInitialPregnancy').checked = defaults.randomInitialPregnancy;
-                    document.getElementById('monthlyCows').value = defaults.monthlyCows;
-                    document.getElementById('newCowPregnancyMonth').value = defaults.newCowPregnancyMonth;
-                    document.getElementById('randomMonthlyPregnancy').checked = defaults.randomMonthlyPregnancy;
-                    document.getElementById('autoAddCows').checked = defaults.autoAddCows;
-                    document.getElementById('femaleCowThreshold').value = defaults.femaleCowThreshold;
-                    document.getElementById('maxAutoAddCows').value = defaults.maxAutoAddCows;
-                    document.getElementById('cowSourceType').value = defaults.cowSourceType;
-                    document.getElementById('newCowPrice').value = defaults.newCowPrice;
-                    document.getElementById('months').value = defaults.months;
-                    document.getElementById('summaryPeriod').value = defaults.summaryPeriod || '6';
-                    document.getElementById('milkingThreshold').value = defaults.milkingThreshold;
-                    document.getElementById('calfMaturityAge').value = defaults.calfMaturityAge;
-                    document.getElementById('maleCalfRemovalAge').value = defaults.maleCalfRemovalAge;
-                    document.getElementById('birthSuccessRate').value = defaults.birthSuccessRate;
-                    document.getElementById('postBirthWait').value = defaults.postBirthWait;
-                    document.getElementById('useFemaleSeed').checked = defaults.useFemaleSeed;
-                    document.getElementById('startYear').value = defaults.startYear;
-                    document.getElementById('startMonth').value = defaults.startMonth;
-                    document.getElementById('milkPerCow').value = defaults.milkPerCow;
-                    document.getElementById('milkPrice').value = defaults.milkPrice;
-                    document.getElementById('maleCalf').value = defaults.maleCalf;
-                    document.getElementById('feedCostPerCow').value = defaults.feedCostPerCow;
-                    document.getElementById('calfFeedRatio').value = defaults.calfFeedRatio;
-                    document.getElementById('otherExpenses').value = defaults.otherExpenses;
-                    document.getElementById('herdSizeLimit').value = defaults.herdSizeLimit || '';
-                    document.getElementById('oldCowPrice').value = defaults.oldCowPrice || '50000';
-                    document.getElementById('enableDeaths').checked = defaults.enableDeaths;
-                    document.getElementById('monthlyCowDeathRate').value = defaults.monthlyCowDeathRate;
-                    document.getElementById('monthlyCalfDeathRate').value = defaults.monthlyCalfDeathRate;
-                    document.getElementById('enableCowAddition').checked = defaults.enableCowAddition !== undefined ? defaults.enableCowAddition : true;
-                    document.getElementById('cowAdditionFrequency').value = defaults.cowAdditionFrequency || '1';
-                }
-                updateNewCowPriceInput();
-            }
-
-            function saveCurrentAsDefaults() {
-                const defaults = {
-                    initialCowCount: document.getElementById('initialCowCount').value,
-                    initialPregnancyMonth: document.getElementById('initialPregnancyMonth').value,
-                    randomInitialPregnancy: document.getElementById('randomInitialPregnancy').checked,
-                    monthlyCows: document.getElementById('monthlyCows').value,
-                    newCowPregnancyMonth: document.getElementById('newCowPregnancyMonth').value,
-                    randomMonthlyPregnancy: document.getElementById('randomMonthlyPregnancy').checked,
-                    autoAddCows: document.getElementById('autoAddCows').checked,
-                    femaleCowThreshold: document.getElementById('femaleCowThreshold').value,
-                    maxAutoAddCows: document.getElementById('maxAutoAddCows').value,
-                    cowSourceType: document.getElementById('cowSourceType').value,
-                    newCowPrice: document.getElementById('newCowPrice').value,
-                    months: document.getElementById('months').value,
-                    summaryPeriod: document.getElementById('summaryPeriod').value,
-                    milkingThreshold: document.getElementById('milkingThreshold').value,
-                    calfMaturityAge: document.getElementById('calfMaturityAge').value,
-                    maleCalfRemovalAge: document.getElementById('maleCalfRemovalAge').value,
-                    birthSuccessRate: document.getElementById('birthSuccessRate').value,
-                    postBirthWait: document.getElementById('postBirthWait').value,
-                    useFemaleSeed: document.getElementById('useFemaleSeed').checked,
-                    startYear: document.getElementById('startYear').value,
-                    startMonth: document.getElementById('startMonth').value,
-                    milkPerCow: document.getElementById('milkPerCow').value,
-                    milkPrice: document.getElementById('milkPrice').value,
-                    maleCalf: document.getElementById('maleCalf').value,
-                    feedCostPerCow: document.getElementById('feedCostPerCow').value,
-                    calfFeedRatio: document.getElementById('calfFeedRatio').value,
-                    otherExpenses: document.getElementById('otherExpenses').value,
-                    herdSizeLimit: document.getElementById('herdSizeLimit').value,
-                    oldCowPrice: document.getElementById('oldCowPrice').value,
-                    enableDeaths: document.getElementById('enableDeaths').checked,
-                    monthlyCowDeathRate: parseFloat(document.getElementById('monthlyCowDeathRate').value),
-                    monthlyCalfDeathRate: parseFloat(document.getElementById('monthlyCalfDeathRate').value),
-                    enableCowAddition: document.getElementById('enableCowAddition').checked,
-                    cowAdditionFrequency: parseInt(document.getElementById('cowAdditionFrequency').value)
-                };
-                localStorage.setItem('herdSimDefaults', JSON.stringify(defaults));
-                showAlert('Mevcut değerler varsayılan olarak kaydedildi.', 'success');
-            }
-
-            document.getElementById('saveDefaultsBtn').addEventListener('click', function() {
-                saveCurrentAsDefaults();
-                updateNewCowPriceInput();
-            });
-
-            loadSavedDefaults();
 
             function updateNewCowPriceInput() {
                 const cowSourceType = document.getElementById('cowSourceType');
                 const newCowPriceInput = document.getElementById('newCowPrice');
                 const newCowPriceContainer = newCowPriceInput.closest('.col-6');
-                if (cowSourceType.value === 'external') {
+                if (cowSourceType.value === 'external') { 
                     newCowPriceInput.disabled = true;
-                    newCowPriceContainer.style.opacity = '0.6';
+                    if(newCowPriceContainer) { newCowPriceContainer.style.opacity = '0.6'; newCowPriceContainer.style.pointerEvents = 'none'; }
                 } else {
                     newCowPriceInput.disabled = false;
-                    newCowPriceContainer.style.opacity = '1';
+                    if(newCowPriceContainer) { newCowPriceContainer.style.opacity = '1'; newCowPriceContainer.style.pointerEvents = 'auto'; }
                 }
             }
-            document.getElementById('cowSourceType').addEventListener('change', updateNewCowPriceInput);
             updateNewCowPriceInput();
         });
+
+        // --- Diğer Fonksiyonlar ---
+        const PROFILE_STORAGE_KEY = 'herdSimProfiles';
+        const LAST_PROFILE_KEY = 'herdSimLastProfile';
+        function getFormValues() { const formIds = ['initialCowCount', 'initialPregnancyMonth', 'randomInitialPregnancy', 'monthlyCows', 'newCowPregnancyMonth', 'randomMonthlyPregnancy', 'autoAddCows', 'femaleCowThreshold', 'maxAutoAddCows', 'cowSourceType', 'newCowPrice', 'months', 'summaryPeriod', 'milkingThreshold', 'calfMaturityAge', 'maleCalfRemovalAge', 'birthSuccessRate', 'postBirthWait', 'useFemaleSeed', 'startYear', 'startMonth', 'milkPerCow', 'milkPrice', 'maleCalf', 'feedCostPerCow', 'calfFeedRatio', 'otherExpenses', 'herdSizeLimit', 'oldCowPrice', 'enableDeaths', 'monthlyCowDeathRate', 'monthlyCalfDeathRate', 'enableCowAddition', 'cowAdditionFrequency', 'staffSalary', 'staffPerAnimal']; const values = {}; formIds.forEach(id => { const el = document.getElementById(id); if(el) { if (el.type === 'checkbox') { values[id] = el.checked; } else { values[id] = el.value; } } }); return values; }
+        function setFormValues(profileData) { for (const id in profileData) { const el = document.getElementById(id); if (el) { if (el.type === 'checkbox') { el.checked = profileData[id]; } else { el.value = profileData[id]; } const changeEvent = new Event('change'); if (['randomInitialPregnancy', 'randomMonthlyPregnancy', 'enableCowAddition', 'autoAddCows', 'enableDeaths', 'cowSourceType'].includes(id)) { el.dispatchEvent(changeEvent); } } } }
+        function getProfiles() { const profiles = localStorage.getItem(PROFILE_STORAGE_KEY); return profiles ? JSON.parse(profiles) : {}; }
+        function initializeProfileSystem() { let profiles = getProfiles(); if (Object.keys(profiles).length === 0) { profiles['Varsayılan'] = getFormValues(); localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profiles)); } populateProfileSelector(profiles); const lastProfileName = localStorage.getItem(LAST_PROFILE_KEY); if (lastProfileName && profiles[lastProfileName]) { document.getElementById('profileSelector').value = lastProfileName; loadProfile(lastProfileName); } else { const firstProfileName = Object.keys(profiles)[0]; if (firstProfileName) { loadProfile(firstProfileName); } } }
+        function populateProfileSelector(profiles) { const selector = document.getElementById('profileSelector'); selector.innerHTML = ''; for (const name in profiles) { const option = document.createElement('option'); option.value = name; option.textContent = name; selector.appendChild(option); } }
+        function loadProfile(profileName) { const profiles = getProfiles(); if (profiles[profileName]) { setFormValues(profiles[profileName]); localStorage.setItem(LAST_PROFILE_KEY, profileName); document.getElementById('profileSelector').value = profileName; } }
+        function openSaveProfileModal() { const currentProfileName = document.getElementById('profileSelector').value || 'Yeni Profil'; document.getElementById('profileNameInput').value = currentProfileName; saveProfileModal.show(); }
+        function executeSaveProfile() { const profileNameInput = document.getElementById('profileNameInput'); const profileName = profileNameInput.value.trim(); if (profileName) { const profiles = getProfiles(); profiles[profileName] = getFormValues(); localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profiles)); localStorage.setItem(LAST_PROFILE_KEY, profileName); populateProfileSelector(profiles); document.getElementById('profileSelector').value = profileName; saveProfileModal.hide(); showAlert(`'${profileName}' profili kaydedildi.`, 'success'); } else { showAlert('Profil adı boş olamaz.', 'danger'); } }
+        function openDeleteConfirmModal() { const selector = document.getElementById('profileSelector'); const profileNameToDelete = selector.value; if (!profileNameToDelete) { showAlert('Silinecek bir profil seçili değil.', 'danger'); return; } const profiles = getProfiles(); if (Object.keys(profiles).length <= 1) { showAlert('Son profili silemezsiniz.', 'danger'); return; } profileToDelete = profileNameToDelete; document.getElementById('profileNameToDeleteSpan').textContent = profileToDelete; deleteConfirmModal.show(); }
+        function executeDeleteProfile() { if (!profileToDelete) return; const profiles = getProfiles(); delete profiles[profileToDelete]; localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profiles)); const remainingProfiles = Object.keys(profiles); const newActiveProfile = remainingProfiles.length > 0 ? remainingProfiles[0] : null; localStorage.setItem(LAST_PROFILE_KEY, newActiveProfile); populateProfileSelector(profiles); if (newActiveProfile) { loadProfile(newActiveProfile); } showAlert(`'${profileToDelete}' profili silindi.`, 'info'); deleteConfirmModal.hide(); profileToDelete = null; }
+        function showAlert(message, type = 'info') { const alertContainer = document.querySelector('.alert-container'); const alertElement = document.createElement('div'); alertElement.className = `custom-alert alert-${type}`; alertElement.innerHTML = `<div class="alert-content"><i class="bi ${type === 'success' ? 'bi-check-circle' : 'bi-info-circle'}"></i><span>${message}</span></div><button type="button" class="close-btn" onclick="this.parentElement.remove()"><i class="bi bi-x"></i></button>`; alertContainer.appendChild(alertElement); setTimeout(() => alertElement.classList.add('show'), 10); setTimeout(() => { alertElement.classList.remove('show'); setTimeout(() => alertElement.remove(), 300); }, 5000); }
+        function resetTable() { const tbody = document.getElementById('resultsTable'); if (tbody.children.length > 0) { tbody.innerHTML = ''; ipcRenderer.send('reset-calculations'); showAlert('Hesaplama sonuçları temizlendi.', 'info'); } else { showAlert('Tablo zaten boş.', 'info'); } }
+        function runCalculation(e) { e.preventDefault(); const params = getFormValues(); try { const numericParams = { initial_cow_count: parseInt(params.initialCowCount), initial_pregnancy_month: params.randomInitialPregnancy ? 'random' : parseInt(params.initialPregnancyMonth), monthly_new_cows: parseInt(params.monthlyCows), new_cow_pregnancy_month: params.randomMonthlyPregnancy ? 'random' : parseInt(params.newCowPregnancyMonth), months: parseInt(params.months), milking_threshold: parseInt(params.milkingThreshold), calf_maturity_age: parseInt(params.calfMaturityAge), male_calf_removal_age: parseInt(params.maleCalfRemovalAge), birth_success_rate: parseInt(params.birthSuccessRate), post_birth_wait: parseInt(params.postBirthWait), start_year: parseInt(params.startYear), start_month: parseInt(params.startMonth), milk_per_cow: parseFloat(params.milkPerCow), milk_price: parseFloat(params.milkPrice), male_calf_price: parseFloat(params.maleCalf), feed_cost_per_cow: parseFloat(params.feedCostPerCow), calf_feed_ratio: parseFloat(params.calfFeedRatio) / 100, other_expenses: parseFloat(params.otherExpenses), staff_salary: parseFloat(params.staffSalary), staff_per_animal: parseInt(params.staffPerAnimal), female_cow_threshold: parseInt(params.femaleCowThreshold), max_auto_add_cows: parseInt(params.maxAutoAddCows), new_cow_price: parseFloat(params.newCowPrice), cow_addition_frequency: parseInt(params.cowAdditionFrequency), old_cow_price: parseFloat(params.oldCowPrice), monthly_cow_death_rate: parseFloat(params.monthlyCowDeathRate), monthly_calf_death_rate: parseFloat(params.monthlyCalfDeathRate), herd_size_limit: params.herdSizeLimit ? parseInt(params.herdSizeLimit) : null, use_female_sperm: params.useFemaleSeed, auto_add_cows: params.autoAddCows, cow_source_type: params.cowSourceType, enable_cow_addition: params.enableCowAddition, enable_deaths: params.enableDeaths, }; ipcRenderer.send('calculate-herd', numericParams); } catch (error) { showAlert('Lütfen tüm alanları doğru şekilde doldurun.', 'danger'); } }
+        function updateFinancials() { const params = getFormValues(); const financialParams = { milk_per_cow: parseFloat(params.milkPerCow), milk_price: parseFloat(params.milkPrice), male_calf_price: parseFloat(params.maleCalf), feed_cost_per_cow: parseFloat(params.feedCostPerCow), calf_feed_ratio: parseFloat(params.calfFeedRatio) / 100, other_expenses: parseFloat(params.otherExpenses), staff_salary: parseFloat(params.staffSalary), staff_per_animal: parseInt(params.staffPerAnimal), cow_source_type: params.cowSourceType, new_cow_price: parseFloat(params.newCowPrice), enable_cow_addition: params.enableCowAddition, cow_addition_frequency: parseInt(params.cowAdditionFrequency), herd_size_limit: params.herdSizeLimit ? parseInt(params.herdSizeLimit) : null, old_cow_price: parseFloat(params.oldCowPrice), enable_deaths: params.enableDeaths, monthly_cow_death_rate: parseFloat(params.monthlyCowDeathRate), monthly_calf_death_rate: parseFloat(params.monthlyCalfDeathRate) }; ipcRenderer.send('update-financials', financialParams); }
+        
+        ipcRenderer.on('calculation-results', (event, results) => {
+            const tbody = document.getElementById('resultsTable');
+            tbody.innerHTML = '';
+            let periodIncome = 0, periodExpenses = 0, periodProfit = 0, totalIncome = 0, totalExpenses = 0, totalProfit = 0;
+            const summaryPeriod = parseInt(document.getElementById('summaryPeriod').value);
+            let monthCounter = 0;
+            let periodStartDate = '';
+            let totalDeadCows = 0;
+            let totalDeadCalves = 0;
+            results.forEach((month, index) => {
+                if (monthCounter === 0) { periodStartDate = month.date; }
+                totalDeadCows = month.total_dead_cows;
+                totalDeadCalves = month.total_dead_calves;
+                const profitClass = month.profit >= 0 ? 'table-success-light' : 'table-danger-light';
+                const row = document.createElement('tr');
+                // DÜZELTME: Sağmal Oranı'nı içeren <td>'ye "td-vertical-middle" sınıfı eklendi.
+                row.innerHTML = `<td>${month.date}</td><td>${month.milking_cows} / ${month.dry_cows}</td><td class="td-vertical-middle">${createRatioProgressBar(month.milking_ratio)}</td><td>${month.pregnant_heifers} / ${month.pregnant_cows}</td><td>${month.female_calves}</td><td>${month.male_calves} / ${month.total_removed_male_calves}</td><td>${month.total_animals} ${month.current_removed_old_cows > 0 ? `(-${month.current_removed_old_cows})` : ''}</td><td>${month.monthly_dead_cows} / ${month.monthly_dead_calves}</td><td>${month.income.toLocaleString('tr-TR')} ₺ / ${month.expenses.toLocaleString('tr-TR')} ₺</td><td class="${profitClass}">${month.profit.toLocaleString('tr-TR')} ₺</td>`;
+                tbody.appendChild(row);
+                totalIncome += month.income; totalExpenses += month.expenses; totalProfit += month.profit; periodIncome += month.income; periodExpenses += month.expenses; periodProfit += month.profit; monthCounter++;
+                if (monthCounter === summaryPeriod || index === results.length - 1) {
+                    if (monthCounter > 0) {
+                        const summaryRow = document.createElement('tr');
+                        summaryRow.className = 'table-secondary fw-bold summary-row';
+                        const summaryProfitClass = periodProfit >= 0 ? 'text-success' : 'text-danger';
+                        summaryRow.innerHTML = `<td colspan="7" class="text-end">${periodStartDate} - ${month.date} Dönemi Toplamları:</td><td>(${totalDeadCows}/${totalDeadCalves})</td><td>${periodIncome.toLocaleString('tr-TR')} ₺ / ${periodExpenses.toLocaleString('tr-TR')} ₺</td><td class="${summaryProfitClass}">${periodProfit.toLocaleString('tr-TR')} ₺</td>`;
+                        tbody.appendChild(summaryRow);
+                    }
+                    periodIncome = 0; periodExpenses = 0; periodProfit = 0; monthCounter = 0;
+                }
+            });
+            const totalRow = document.createElement('tr');
+            totalRow.className = 'table-dark fw-bold';
+            const totalProfitClass = totalProfit >= 0 ? 'text-success' : 'text-danger';
+            totalRow.innerHTML = `<td colspan="7" class="text-end">Genel Toplam:</td><td>(${totalDeadCows}/${totalDeadCalves})</td><td>${totalIncome.toLocaleString('tr-TR')} ₺ / ${totalExpenses.toLocaleString('tr-TR')} ₺</td><td class="${totalProfitClass}">${totalProfit.toLocaleString('tr-TR')} ₺</td>`;
+            tbody.appendChild(totalRow);
+            showAlert('Hesaplama başarıyla tamamlandı.', 'success');
+        });
+
+        ipcRenderer.on('calculation-error', (event, error) => { showAlert('Hesaplama sırasında bir hata oluştu: ' + error, 'danger'); });
+        function createRatioProgressBar(ratio) { const getRatioBarClass = (r) => { if (r >= 80) return 'excellent'; if (r >= 70) return 'good'; if (r >= 60) return 'average'; return 'poor'; }; const barClass = getRatioBarClass(ratio); return `<div class="ratio-progress"><div class="progress-bar ${barClass}" style="width: ${ratio}%"></div><div class="progress-text">${ratio}%</div></div>`; }
     </script>
 </body>
 </html>

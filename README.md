@@ -65,14 +65,4 @@ npm start
 
 ---
 
-Bilinen hatalar:
--
-
-Eklenecekler
--görsel düzenlemeler
--daha detaylı girdi opsiyonları
--kararlılıkta iyileştirmeler
--inek sayısına oranla işçi gideri ekleme
--varsayılan değerler profili kaydetme
-
 MIT Lisansı ile lisanslanmıştır. | Licensed under MIT License.

@@ -1,6 +1,7 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
+const fs = require('fs');
 
 let mainWindow;
 let lastCalculationParams = null;  // Son hesaplama parametrelerini saklayacak değişken
@@ -22,7 +23,77 @@ function createWindow() {
     // Uncomment the following line to open DevTools by default
     // mainWindow.webContents.openDevTools();
 }
+// YENİ: PDF Dışa Aktarma İşlemi
+ipcMain.on('export-to-pdf', (event, content) => {
+  // PDF içeriğini oluşturmak için gizli bir pencere aç
+  const pdfWindow = new BrowserWindow({
+    show: false,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true
+    }
+  });
 
+  // Renderer'dan gelen HTML ve stilleri kullanarak tam bir HTML sayfası oluştur
+  const pdfContent = `
+    <!DOCTYPE html>
+    <html lang="tr" data-bs-theme="${content.theme}">
+      <head>
+        <meta charset="UTF-8">
+        <title>Hesaplama Sonuçları</title>
+        <style>
+          ${content.styles}
+          body { 
+            padding: 20px; 
+            background-color: var(--bs-body-bg); 
+            color: var(--bs-body-color);
+            -webkit-print-color-adjust: exact; /* Arka plan renklerinin yazdırılmasını zorunlu kılar */
+          }
+          .table { font-size: 10px; }
+          .progress-bar { -webkit-print-color-adjust: exact; } /* Progress barların renkli çıkması için */
+        </style>
+      </head>
+      <body>
+        <h2>Hesaplama Sonuçları</h2>
+        ${content.body}
+      </body>
+    </html>
+  `;
+
+  // Oluşturulan HTML'i gizli pencereye yükle
+  pdfWindow.loadURL("data:text/html;charset=utf-8," + encodeURIComponent(pdfContent));
+
+  pdfWindow.webContents.on('did-finish-load', async () => {
+    try {
+      // Sayfa yüklendiğinde PDF'e dönüştür
+      const pdfData = await pdfWindow.webContents.printToPDF({
+        landscape: true,
+        pageSize: 'A4',
+        printBackground: true
+      });
+
+      // Kullanıcıya nereye kaydedeceğini sor
+      const { filePath } = await dialog.showSaveDialog({
+        title: 'PDF Olarak Kaydet',
+        defaultPath: `herdsim-sonuclari-${Date.now()}.pdf`,
+        filters: [{ name: 'PDF Dosyaları', extensions: ['pdf'] }]
+      });
+
+      if (filePath) {
+        // Seçilen yola dosyayı yaz
+        fs.writeFileSync(filePath, pdfData);
+        // Başarı mesajını renderer'a gönder
+        event.sender.send('pdf-export-complete', { success: true, path: filePath });
+      }
+    } catch (error) {
+      console.error('PDF oluşturma hatası:', error);
+      event.sender.send('pdf-export-complete', { success: false, error: error.message });
+    } finally {
+      // İşlem bittikten sonra gizli pencereyi kapat
+      pdfWindow.close();
+    }
+  });
+});
 app.whenReady().then(createWindow);
 
 app.on('window-all-closed', () => {

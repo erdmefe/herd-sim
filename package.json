@@ -1,5 +1,5 @@
 {
-  "name": "sut-inekciligi-hesaplayici",
+  "name": "HerdSIM",
   "version": "1.0.0",
   "description": "Süt İnekçiliği Sürü Hesaplayıcı",
   "main": "main.js",
@@ -24,7 +24,7 @@
     },
     "win": {
       "target": "nsis",
-      "icon": "build/icon.png"
+      "icon": "assets/icon"
     },
     "nsis": {
       "oneClick": false,
