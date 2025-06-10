@@ -72,8 +72,9 @@ ipcMain.on('update-financials', (event, financialParams) => {
     }
 
     // Sadece finansal parametreleri güncelle
+    // ...
     const updatedParams = {
-        herd_state: Buffer.from(lastHerdState, 'binary').toString('base64'),  // Binary'den base64'e çevir
+        herd_state: Buffer.from(lastHerdState, 'binary').toString('base64'),
         milk_per_cow: financialParams.milk_per_cow,
         milk_price: financialParams.milk_price,
         male_calf_price: financialParams.male_calf_price,
@@ -83,17 +84,29 @@ ipcMain.on('update-financials', (event, financialParams) => {
         // Yeni inek parametreleri
         cow_source_type: financialParams.cow_source_type,
         new_cow_price: financialParams.new_cow_price,
+        // İnek ekleme parametreleri
+        enable_cow_addition: financialParams.enable_cow_addition,
+        cow_addition_frequency: financialParams.cow_addition_frequency, // <-- BU SATIRI EKLEYİN
         // Sürü limiti parametreleri
         herd_size_limit: financialParams.herd_size_limit,
-        old_cow_price: financialParams.old_cow_price
+        old_cow_price: financialParams.old_cow_price,
+        // Ölüm parametreleri
+        enable_deaths: financialParams.enable_deaths,
+        monthly_cow_death_rate: financialParams.monthly_cow_death_rate,
+        monthly_calf_death_rate: financialParams.monthly_calf_death_rate
     };
+    //...
 
     // Hesaplamayı yeni finansal parametrelerle tekrarla
     calculateHerd(updatedParams, event, false, true);  // false = don't save state, true = update financials
 });
 
 function calculateHerd(params, event, saveState = false, updateFinancials = false) {
-    const pythonArgs = ['herd_calculator.py', JSON.stringify(params)];
+    const pythonArgs = ['herd_calculator.py', JSON.stringify({
+        ...params,
+        enable_cow_addition: params.enable_cow_addition !== undefined ? params.enable_cow_addition : true,
+        cow_addition_frequency: params.cow_addition_frequency || 1
+    })];
     if (updateFinancials) {
         pythonArgs.push('update_financials');
     }

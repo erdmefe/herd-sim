@@ -16,12 +16,14 @@ class Cow:
     is_milking: bool = False
     has_given_birth: bool = False  # Hiç doğum yapıp yapmadığını takip etmek için
     age_months: int = 0  # İneğin yaşını takip etmek için
+    is_dead: bool = False  # İneğin ölü olup olmadığını takip etmek için
 
 @dataclass
 class Calf:
     is_female: bool
     age_months: int = 0
     birth_date: datetime = None
+    is_dead: bool = False  # Buzağının ölü olup olmadığını takip etmek için
 
 class HerdManager:
     def __init__(self, initial_cow_count=10, initial_pregnancy_month=6, 
@@ -34,12 +36,18 @@ class HerdManager:
                  male_calf_price=15000, calf_feed_ratio=0.2,
                  auto_add_cows=False, female_cow_threshold=2,
                  max_auto_add_cows=3, cow_source_type='external',
-                 new_cow_price=75000, herd_size_limit=None, old_cow_price=50000):
+                 new_cow_price=75000, herd_size_limit=None, old_cow_price=50000,
+                 enable_deaths=False, monthly_cow_death_rate=0.5, monthly_calf_death_rate=0.5,
+                 enable_cow_addition=True, cow_addition_frequency=1):
         self.cows: List[Cow] = []
         self.calves: List[Calf] = []
         self.current_date = datetime(start_year, start_month, 1)
         self.total_removed_male_calves = 0
         self.total_removed_old_cows = 0  # Satılan yaşlı inek sayısını takip etmek için
+        self.total_dead_cows = 0  # Toplam ölen inek sayısı
+        self.total_dead_calves = 0  # Toplam ölen buzağı sayısı
+        self.monthly_dead_cows = 0  # Bu ay ölen inek sayısı
+        self.monthly_dead_calves = 0  # Bu ay ölen buzağı sayısı
         
         # Configuration parameters
         self.monthly_new_cows = monthly_new_cows
@@ -50,6 +58,11 @@ class HerdManager:
         self.birth_success_rate = birth_success_rate
         self.use_female_sperm = use_female_sperm
         self.post_birth_wait = post_birth_wait
+        
+        # İnek ekleme parametreleri
+        self.enable_cow_addition = enable_cow_addition
+        self.cow_addition_frequency = cow_addition_frequency
+        self.months_since_last_addition = 0
         
         # Otomatik inek ekleme parametreleri
         self.auto_add_cows = auto_add_cows
@@ -73,6 +86,11 @@ class HerdManager:
         self.herd_size_limit = herd_size_limit  # Maksimum sürü büyüklüğü
         self.old_cow_price = old_cow_price  # Yaşlı inek satış fiyatı
         
+        # Ölüm parametreleri
+        self.enable_deaths = enable_deaths  # Ölüm özelliği açık/kapalı
+        self.monthly_cow_death_rate = monthly_cow_death_rate  # Aylık inek ölüm oranı (%)
+        self.monthly_calf_death_rate = monthly_calf_death_rate  # Aylık buzağı ölüm oranı (%)
+        
         # Initialize with initial cows - Başlangıçtaki inekler doğum yapmış kabul edilir
         for _ in range(initial_cow_count):
             if initial_pregnancy_month == 'random':
@@ -85,14 +103,29 @@ class HerdManager:
                 is_pregnant=True,
                 months_until_birth=months_until_birth,
                 is_milking=months_until_birth > self.milking_threshold,
-                has_given_birth=True  # Başlangıçtaki inekler doğum yapmış kabul edilir
+                has_given_birth=True,
+                age_months=0,
+                is_dead=False
             ))
 
         self.monthly_stats = []  # Aylık istatistikleri saklamak için yeni liste
+        self.addition_months = []  # İnek ekleme aylarını takip etmek için
 
     def add_monthly_cow(self):
         # Her ay başında yeni inek maliyetini sıfırla
         self.monthly_cow_expenses = 0
+        
+        # İnek ekleme devre dışı bırakıldıysa hiçbir şey yapma
+        if not self.enable_cow_addition:
+            return
+            
+        # Ekleme frekansını kontrol et
+        self.months_since_last_addition += 1
+        if self.months_since_last_addition < self.cow_addition_frequency:
+            return
+            
+        # Ekleme zamanı geldi, sayacı sıfırla
+        self.months_since_last_addition = 0
         
         # Manuel eklenen inekler
         for _ in range(self.monthly_new_cows):
@@ -106,7 +139,9 @@ class HerdManager:
                 is_pregnant=True,
                 months_until_birth=months_until_birth,
                 is_milking=months_until_birth > self.milking_threshold,
-                has_given_birth=True
+                has_given_birth=True,
+                age_months=0,
+                is_dead=False
             )
             self.cows.append(new_cow)
             
@@ -148,7 +183,9 @@ class HerdManager:
                         is_pregnant=True,
                         months_until_birth=months_until_birth,
                         is_milking=months_until_birth > self.milking_threshold,
-                        has_given_birth=True
+                        has_given_birth=True,
+                        age_months=0,
+                        is_dead=False
                     )
                     self.cows.append(new_cow)
                     
@@ -165,32 +202,81 @@ class HerdManager:
         if not self.herd_size_limit:
             return 0
 
-        total_animals = len(self.cows) + len(self.calves)
-        if total_animals <= self.herd_size_limit:
+        # Sadece yaşayan hayvanları say
+        total_living_animals = sum(1 for cow in self.cows if not cow.is_dead) + sum(1 for calf in self.calves if not calf.is_dead)
+        if total_living_animals <= self.herd_size_limit:
             return 0
 
         # Kaç inek satılması gerektiğini hesapla
-        excess_animals = total_animals - self.herd_size_limit
+        excess_animals = total_living_animals - self.herd_size_limit
         
-        # İnekleri yaşlarına göre sırala (en yaşlıdan en gence)
-        sorted_cows = sorted(self.cows, key=lambda x: x.age_months, reverse=True)
+        # Yaşayan inekleri yaşlarına göre sırala (en yaşlıdan en gence)
+        sorted_living_cows = sorted(
+            [cow for cow in self.cows if not cow.is_dead],
+            key=lambda x: x.age_months,
+            reverse=True
+        )
         
         # En yaşlı inekleri sat
-        removed_count = min(excess_animals, len(sorted_cows))
-        self.cows = sorted_cows[removed_count:]
+        removed_count = min(excess_animals, len(sorted_living_cows))
+        cows_to_keep = sorted_living_cows[removed_count:]
+        
+        # Yaşayan ve satılmayan inekleri koru, ölü inekleri de listede tut
+        self.cows = [cow for cow in self.cows if cow.is_dead or cow in cows_to_keep]
         self.total_removed_old_cows += removed_count
         
         return removed_count
 
+    def process_deaths(self):
+        """
+        Aylık ölüm işlemlerini gerçekleştirir
+        """
+        if not self.enable_deaths:
+            self.monthly_dead_cows = 0
+            self.monthly_dead_calves = 0
+            return
+
+        # İnek ölümlerini hesapla
+        alive_cows = [cow for cow in self.cows if not cow.is_dead]
+        dead_cows = []
+        for cow in alive_cows:
+            # Her inek için ölüm olasılığını kontrol et
+            if random.random() < (self.monthly_cow_death_rate / 100):
+                dead_cows.append(cow)
+        
+        # Buzağı ölümlerini hesapla
+        alive_calves = [calf for calf in self.calves if not calf.is_dead]
+        dead_calves = []
+        for calf in alive_calves:
+            # Her buzağı için ölüm olasılığını kontrol et
+            if random.random() < (self.monthly_calf_death_rate / 100):
+                dead_calves.append(calf)
+        
+        # Ölüm durumlarını işaretle
+        for cow in dead_cows:
+            cow.is_dead = True
+        for calf in dead_calves:
+            calf.is_dead = True
+        
+        # Aylık ve toplam ölüm sayılarını güncelle
+        self.monthly_dead_cows = len(dead_cows)
+        self.monthly_dead_calves = len(dead_calves)
+        self.total_dead_cows += self.monthly_dead_cows
+        self.total_dead_calves += self.monthly_dead_calves
+
     def process_month(self):
         # Her ineğin yaşını bir ay artır
         for cow in self.cows:
-            cow.age_months += 1
+            if not cow.is_dead:
+                cow.age_months += 1
 
         # Process existing cows
         new_calves = []
         
         for cow in self.cows:
+            if cow.is_dead:
+                continue
+
             if cow.is_pregnant:
                 cow.months_until_birth -= 1
                 
@@ -205,20 +291,20 @@ class HerdManager:
                         new_calves.append(Calf(
                             is_female=is_female,
                             age_months=0,
-                            birth_date=self.current_date
+                            birth_date=self.current_date,
+                            is_dead=False
                         ))
                         cow.has_given_birth = True  # İlk doğumunu yaptı
                         cow.is_milking = True  # Doğum sonrası sağmal olur
                     
-                    # Doğum sonrası inek durumu güncelleme (başarılı veya başarısız)
+                    # Doğum sonrası inek durumu güncelleme
                     cow.is_pregnant = False
                     cow.months_until_birth = None
-                    cow.months_until_next_pregnancy = self.post_birth_wait  # Kullanıcı tarafından belirlenen bekleme süresi
+                    cow.months_until_next_pregnancy = self.post_birth_wait
                 
                 elif cow.months_until_birth <= self.milking_threshold:
                     cow.is_milking = False  # Doğuma yakın dönemde sağmal değil
                 else:
-                    # Sadece daha önce doğum yapmış inekler sağmal olabilir
                     cow.is_milking = cow.has_given_birth
             
             else:  # Gebe olmayan inekler
@@ -226,49 +312,57 @@ class HerdManager:
                     cow.months_until_next_pregnancy -= 1
                     
                     if cow.months_until_next_pregnancy <= 0:
-                        # Yeni gebelik başlangıcı
                         cow.is_pregnant = True
                         cow.months_until_birth = 9
                         cow.months_until_next_pregnancy = None
-                        # Sadece daha önce doğum yapmış inekler sağmal olabilir
                         cow.is_milking = cow.has_given_birth
                 
-                # Gebe olmayan inekler sadece doğum yapmışsa sağmal olabilir
                 cow.is_milking = cow.has_given_birth
 
         self.calves.extend(new_calves)
 
-        # Buzağıların yaşını artır ve olgunlaşanları işle
+        # Buzağıların yaşını artır
+        for calf in self.calves:
+            if not calf.is_dead:
+                calf.age_months += 1
+
+        # Olgunlaşan dişi buzağıları ve satılacak erkek buzağıları işle
         mature_female_calves = []
         remaining_calves = []
 
         for calf in self.calves:
-            calf.age_months += 1
-            
+            if calf.is_dead:
+                remaining_calves.append(calf)
+                continue
+
             if calf.age_months >= self.calf_maturity_age and calf.is_female:
                 mature_female_calves.append(calf)
             else:
                 remaining_calves.append(calf)
 
-        # Olgunlaşan dişi buzağıları düve olarak ekle (gebe ama sağmal değil)
+        # Olgunlaşan dişi buzağıları düve olarak ekle
         for _ in mature_female_calves:
             self.cows.append(Cow(
                 is_pregnant=True,
                 months_until_birth=9,
-                is_milking=False,  # Düveler sağmal değil
-                has_given_birth=False  # Henüz doğum yapmadı
+                is_milking=False,
+                has_given_birth=False,
+                age_months=0,
+                is_dead=False
             ))
 
         # Erkek buzağıları kontrol et ve çıkar
         removed_males = sum(1 for calf in self.calves 
-                          if calf.age_months >= self.male_calf_removal_age and not calf.is_female)
+                          if not calf.is_dead and not calf.is_female and 
+                          calf.age_months >= self.male_calf_removal_age)
         self.total_removed_male_calves += removed_males
 
         # Kalan buzağıları güncelle
         self.calves = [calf for calf in remaining_calves 
                       if not (
-                          (calf.age_months >= self.calf_maturity_age and calf.is_female) or
-                          (calf.age_months >= self.male_calf_removal_age and not calf.is_female)
+                          not calf.is_dead and
+                          ((calf.age_months >= self.calf_maturity_age and calf.is_female) or
+                           (calf.age_months >= self.male_calf_removal_age and not calf.is_female))
                       )]
 
         # Yeni inekleri ekle
@@ -276,6 +370,9 @@ class HerdManager:
 
         # Yaşlı inekleri sat (eğer limit aşıldıysa)
         removed_old_cows = self.remove_old_cows()
+
+        # Ölüm işlemlerini gerçekleştir
+        self.process_deaths()
 
         self.current_date += relativedelta(months=1)
 
@@ -292,20 +389,20 @@ class HerdManager:
         Returns:
             float: Toplam aylık gelir
         """
-        # 1. Süt geliri hesaplama
+        # 1. Süt geliri hesaplama (sadece yaşayan sağmal inekler)
         daily_milk = float(milking_cows) * float(self.milk_per_cow)
         monthly_milk = daily_milk * 30.0
         milk_income = monthly_milk * float(self.milk_price)
         
-        # 2. Erkek buzağı satış geliri
+        # 2. Erkek buzağı satış geliri (sadece yaşayan erkek buzağılar)
         if removed_male_calves is not None:
             male_calf_income = float(removed_male_calves) * float(self.male_calf_price)
         else:
             removable_male_calves = sum(1 for calf in self.calves 
-                if not calf.is_female and calf.age_months >= self.male_calf_removal_age)
+                if not calf.is_female and not calf.is_dead and calf.age_months >= self.male_calf_removal_age)
             male_calf_income = float(removable_male_calves) * float(self.male_calf_price)
         
-        # 3. Yaşlı inek satış geliri
+        # 3. Yaşlı inek satış geliri (sadece yaşayan inekler)
         if current_removed_old_cows is not None:
             old_cow_income = float(current_removed_old_cows) * float(self.old_cow_price)
         else:
@@ -322,42 +419,37 @@ class HerdManager:
         
         return total_income
 
-    def calculate_expenses(self, total_cows=None, total_calves=None):
+    def calculate_expenses(self, total_cows=None, total_calves=None, is_addition_month=False, auto_added_cows=0):
         """
         Aylık gider hesaplama
         Args:
             total_cows (int, optional): Toplam inek sayısı (finansal güncelleme için)
             total_calves (int, optional): Toplam buzağı sayısı (finansal güncelleme için)
+            is_addition_month (bool): Bu ayın inek ekleme ayı olup olmadığı
+            auto_added_cows (int): Bu ay otomatik olarak eklenen inek sayısı
         Returns:
             float: Toplam aylık gider
         """
         # 1. İnek yem giderleri
         if total_cows is None:
-            total_cows = len(self.cows)
+            total_cows = sum(1 for cow in self.cows if not cow.is_dead)
         daily_feed_cost = float(total_cows) * float(self.feed_cost_per_cow)
         monthly_feed_cost = daily_feed_cost * 30.0
         
         # 2. Buzağı yem giderleri
         if total_calves is None:
-            total_calves = len(self.calves)
-        # Buzağı günlük yem maliyeti = Buzağı sayısı × (İnek yem maliyeti × Buzağı yem oranı)
+            total_calves = sum(1 for calf in self.calves if not calf.is_dead)
         daily_calf_feed_cost = float(total_calves) * (float(self.feed_cost_per_cow) * float(self.calf_feed_ratio))
         monthly_calf_feed_cost = daily_calf_feed_cost * 30.0
         
         # 3. Yeni inek maliyetleri (öz kaynak seçiliyse)
         new_cow_cost = 0.0
-        if self.cow_source_type == 'internal':
+        if self.cow_source_type == 'internal' and is_addition_month:
             # Manuel eklenen inekler
             new_cow_cost += float(self.monthly_new_cows) * float(self.new_cow_price)
-            
-            # Otomatik eklenen inekler (eğer aktifse)
+            # Otomatik eklenen inekler
             if self.auto_add_cows:
-                female_calves = sum(1 for calf in self.calves if calf.is_female)
-                auto_add_count = min(
-                    female_calves // self.female_cow_threshold,
-                    self.max_auto_add_cows
-                )
-                new_cow_cost += float(auto_add_count) * float(self.new_cow_price)
+                new_cow_cost += float(auto_added_cows) * float(self.new_cow_price)
         
         # 4. Diğer giderler (sabit giderler)
         other_expenses = float(self.other_expenses)
@@ -366,19 +458,22 @@ class HerdManager:
         total_expenses = monthly_feed_cost + monthly_calf_feed_cost + new_cow_cost + other_expenses
         
         return total_expenses
-
+    
     def get_statistics(self):
-        milking_cows = sum(1 for cow in self.cows if cow.is_milking)
-        dry_cows = sum(1 for cow in self.cows if not cow.is_milking and cow.has_given_birth)
+        # Sadece yaşayan inekleri say
+        milking_cows = sum(1 for cow in self.cows if cow.is_milking and not cow.is_dead)
+        dry_cows = sum(1 for cow in self.cows if not cow.is_milking and cow.has_given_birth and not cow.is_dead)
         
-        # Gebe düve ve inek sayıları ayrı ayrı hesaplanıyor
-        pregnant_heifers = sum(1 for cow in self.cows if cow.is_pregnant and not cow.has_given_birth)
-        pregnant_cows = sum(1 for cow in self.cows if cow.is_pregnant and cow.has_given_birth)
+        # Gebe düve ve inek sayıları ayrı ayrı hesaplanıyor (sadece yaşayanlar)
+        pregnant_heifers = sum(1 for cow in self.cows if cow.is_pregnant and not cow.has_given_birth and not cow.is_dead)
+        pregnant_cows = sum(1 for cow in self.cows if cow.is_pregnant and cow.has_given_birth and not cow.is_dead)
         
-        female_calves = sum(1 for calf in self.calves if calf.is_female)
-        male_calves = sum(1 for calf in self.calves if not calf.is_female)
+        # Sadece yaşayan buzağıları say
+        female_calves = sum(1 for calf in self.calves if calf.is_female and not calf.is_dead)
+        male_calves = sum(1 for calf in self.calves if not calf.is_female and not calf.is_dead)
         
-        total_animals = len(self.cows) + len(self.calves)  # Toplam hayvan sayısı
+        # Toplam hayvan sayısı (sadece yaşayanlar)
+        total_animals = sum(1 for cow in self.cows if not cow.is_dead) + sum(1 for calf in self.calves if not calf.is_dead)
         
         # Sağmal oranı hesaplama (yüzde olarak)
         milking_ratio = round((milking_cows / total_animals * 100) if total_animals > 0 else 0, 1)
@@ -394,19 +489,26 @@ class HerdManager:
         current_removed_males = self.total_removed_male_calves - previous_removed_males
         current_removed_old_cows = self.total_removed_old_cows - previous_removed_old_cows
         
-        # Gelir ve gider hesaplamaları
-        income = self.calculate_income(milking_cows, current_removed_males, current_removed_old_cows)
-        expenses = self.calculate_expenses()
-        profit = income - expenses
+        # --- DÜZELTME BAŞLANGICI ---
+        # Gider hesaplaması için gerekli olan "ekleme ayı" ve "otomatik eklenen" bilgilerini hesapla
+        is_addition_month = self.enable_cow_addition and self.cow_source_type == 'internal' and self.months_since_last_addition == 0
         
-        # Otomatik eklenen inek sayısını hesapla
         auto_added_cows = 0
-        if self.auto_add_cows:
-            female_calves_count = sum(1 for calf in self.calves if calf.is_female)
+        if self.auto_add_cows and is_addition_month:
+            female_calves_count = sum(1 for calf in self.calves if calf.is_female and not calf.is_dead)
             auto_added_cows = min(
                 female_calves_count // self.female_cow_threshold,
                 self.max_auto_add_cows
             )
+
+        # Gelir ve gider hesaplamaları
+        income = self.calculate_income(milking_cows, current_removed_males, current_removed_old_cows)
+        expenses = self.calculate_expenses(
+            is_addition_month=is_addition_month,
+            auto_added_cows=auto_added_cows
+        )
+        profit = income - expenses
+        # --- DÜZELTME SONU ---
         
         return {
             'date': self.current_date.strftime('%Y-%m'),
@@ -425,27 +527,21 @@ class HerdManager:
             'expenses': round(expenses),
             'profit': round(profit),
             'auto_added_cows': auto_added_cows,
-            'old_cow_price': self.old_cow_price  # Yaşlı inek satış fiyatını da ekle
+            'old_cow_price': self.old_cow_price,
+            'total_dead_cows': self.total_dead_cows,
+            'total_dead_calves': self.total_dead_calves,
+            'monthly_dead_cows': self.monthly_dead_cows,
+            'monthly_dead_calves': self.monthly_dead_calves,
+            'is_addition_month': is_addition_month
         }
 
     def update_financials(self, milk_per_cow, milk_price, male_calf_price, feed_cost_per_cow, 
                          calf_feed_ratio, other_expenses, cow_source_type='external', new_cow_price=75000,
-                         herd_size_limit=None, old_cow_price=50000):
+                         herd_size_limit=None, old_cow_price=50000, enable_deaths=False,
+                         monthly_cow_death_rate=0.5, monthly_calf_death_rate=0.5,
+                         enable_cow_addition=True, cow_addition_frequency=1):
         """
         Finansal parametreleri güncelle ve tüm ayların hesaplamalarını yeniden yap
-        Args:
-            milk_per_cow (float): İnek başına günlük süt üretimi (lt)
-            milk_price (float): Süt litre fiyatı (TL)
-            male_calf_price (float): Erkek buzağı satış fiyatı (TL)
-            feed_cost_per_cow (float): İnek başına günlük yem maliyeti (TL)
-            calf_feed_ratio (float): Buzağı yem oranı (0-1 arası)
-            other_expenses (float): Aylık diğer giderler (TL)
-            cow_source_type (str): İnek kaynağı ('external' veya 'internal')
-            new_cow_price (float): Yeni inek fiyatı (TL)
-            herd_size_limit (int): Maksimum sürü büyüklüğü
-            old_cow_price (float): Yaşlı inek satış fiyatı (TL)
-        Returns:
-            list: Güncellenmiş aylık istatistikler
         """
         # 1. Finansal parametreleri güncelle
         self.milk_per_cow = float(milk_per_cow)
@@ -458,33 +554,53 @@ class HerdManager:
         self.new_cow_price = float(new_cow_price)
         self.herd_size_limit = herd_size_limit
         self.old_cow_price = float(old_cow_price)
+        self.enable_deaths = enable_deaths
+        self.monthly_cow_death_rate = float(monthly_cow_death_rate)
+        self.monthly_calf_death_rate = float(monthly_calf_death_rate)
+        self.enable_cow_addition = enable_cow_addition
+        self.cow_addition_frequency = int(cow_addition_frequency) # Gelen yeni değeri al
 
-        # 2. Tüm ayların finansal verilerini güncelle
+        # 2. Tüm ayların finansal verilerini yeniden hesapla
         updated_stats = []
         previous_removed_males = 0
         previous_removed_old_cows = 0
-        
-        for month_stat in self.monthly_stats:
-            # 2.1. Bu ay satılan erkek buzağı ve yaşlı inek sayılarını hesapla
+    
+        # Döngü içinde yeni frekansa göre ekleme aylarını belirle
+        for index, month_stat in enumerate(self.monthly_stats):
+            # Bu ay satılan hayvan sayılarını hesapla
             current_removed_males = month_stat['total_removed_male_calves'] - previous_removed_males
             current_removed_old_cows = month_stat['total_removed_old_cows'] - previous_removed_old_cows
             
             previous_removed_males = month_stat['total_removed_male_calves']
             previous_removed_old_cows = month_stat['total_removed_old_cows']
             
-            # 2.2. Gelir hesaplama
+            # Geliri yeniden hesapla
             milking_cows = month_stat['milking_cows']
             income = self.calculate_income(milking_cows, current_removed_males, current_removed_old_cows)
             
-            # 2.3. Gider hesaplama
-            total_cows = month_stat['milking_cows'] + month_stat['dry_cows']
+            # Gideri yeniden hesaplamak için gerekli bilgileri al
+            total_cows = month_stat['milking_cows'] + month_stat['dry_cows'] + month_stat['pregnant_heifers']
             total_calves = month_stat['female_calves'] + month_stat['male_calves']
-            expenses = self.calculate_expenses(total_cows, total_calves)
+            auto_added_cows = month_stat.get('auto_added_cows', 0)
             
-            # 2.4. Kar/zarar hesaplama
+            # YENİ frekansa göre bu ayın ekleme ayı olup olmadığını belirle
+            is_addition_month_for_update = False
+            if self.enable_cow_addition and self.cow_source_type == 'internal':
+                # index % frekans == 0 kontrolü, her 'frekans' ayda bir True olur (0. ay, N. ay, 2N. ay vb.)
+                 if (index + 1) % self.cow_addition_frequency == 0:
+                    is_addition_month_for_update = True
+            
+            # Gideri, YENİ belirlenen ekleme ayı bilgisiyle yeniden hesapla
+            expenses = self.calculate_expenses(
+                total_cows=total_cows,
+                total_calves=total_calves,
+                is_addition_month=is_addition_month_for_update,
+                auto_added_cows=auto_added_cows
+            )
+            
             profit = income - expenses
 
-            # 2.5. Ayın istatistiklerini güncelle
+            # Ayın istatistiklerini güncelle
             updated_month = month_stat.copy()
             updated_month.update({
                 'income': round(income),
@@ -492,7 +608,7 @@ class HerdManager:
                 'profit': round(profit)
             })
             updated_stats.append(updated_month)
-
+        # --- DÜZELTME SONU ---
         return updated_stats
 
 def main():
@@ -505,16 +621,22 @@ def main():
         herd_state_binary = base64.b64decode(herd_state_base64)  # base64'ten binary'ye çevir
         herd = pickle.loads(herd_state_binary)  # binary'den nesneye çevir
         results = herd.update_financials(
-            milk_per_cow=params['milk_per_cow'],
-            milk_price=params['milk_price'],
-            male_calf_price=params['male_calf_price'],
-            feed_cost_per_cow=params['feed_cost_per_cow'],
-            calf_feed_ratio=params['calf_feed_ratio'],
-            other_expenses=params['other_expenses'],
-            cow_source_type=params.get('cow_source_type', 'external'),  # Varsayılan değer: external
-            new_cow_price=params.get('new_cow_price', 75000),  # Varsayılan değer: 75000
+            milk_per_cow=params.get('milk_per_cow', 25),
+            milk_price=params.get('milk_price', 21),
+            male_calf_price=params.get('male_calf_price', 15000),
+            feed_cost_per_cow=params.get('feed_cost_per_cow', 150),
+            calf_feed_ratio=params.get('calf_feed_ratio', 0.2),
+            other_expenses=params.get('other_expenses', 25000),
+            cow_source_type=params.get('cow_source_type', 'external'),
+            new_cow_price=params.get('new_cow_price', 75000),
             herd_size_limit=params.get('herd_size_limit'),
-            old_cow_price=params.get('old_cow_price', 50000)
+            old_cow_price=params.get('old_cow_price', 50000),
+            enable_deaths=params.get('enable_deaths', False),
+            monthly_cow_death_rate=params.get('monthly_cow_death_rate', 0.5),
+            monthly_calf_death_rate=params.get('monthly_calf_death_rate', 0.5),
+            # Bu iki parametrenin doğru alındığından emin oluyoruz
+            enable_cow_addition=params.get('enable_cow_addition', True),
+            cow_addition_frequency=params.get('cow_addition_frequency', 1)
         )
         print(json.dumps(results))
         sys.exit(0)
@@ -545,7 +667,12 @@ def main():
         cow_source_type=params.get('cow_source_type', 'external'),
         new_cow_price=params.get('new_cow_price', 75000),
         herd_size_limit=params.get('herd_size_limit'),
-        old_cow_price=params.get('old_cow_price', 50000)
+        old_cow_price=params.get('old_cow_price', 50000),
+        enable_deaths=params.get('enable_deaths', False),
+        monthly_cow_death_rate=params.get('monthly_cow_death_rate', 0.5),
+        monthly_calf_death_rate=params.get('monthly_calf_death_rate', 0.5),
+        enable_cow_addition=params.get('enable_cow_addition', True),
+        cow_addition_frequency=params.get('cow_addition_frequency', 1)
     )
     
     # Calculate results for specified number of months
@@ -563,4 +690,4 @@ def main():
     print(json.dumps(results))
 
 if __name__ == '__main__':
-    main() 
+    main()

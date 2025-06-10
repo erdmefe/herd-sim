@@ -65,9 +65,11 @@ npm start
 
 ---
 
+Bilinen hatalar:
+-
+
 Eklenecekler
--Rastgele inek ve buzağ ölüm oranı
--yaşlı ineklerin satış opsiyonu
+-görsel düzenlemeler
 -daha detaylı girdi opsiyonları
 -kararlılıkta iyileştirmeler
 -inek sayısına oranla işçi gideri ekleme
