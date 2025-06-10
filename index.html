@@ -887,11 +887,25 @@
                                         <span class="input-group-text">₺</span>
                                     </div>
                                 </div>
-                                <div class="col-12">
+                                <div class="col-6">
                                     <label class="form-label">Diğer Giderler</label>
                                     <div class="input-group input-group-sm">
                                         <input type="number" class="form-control" id="otherExpenses" value="25000" min="0" step="1">
                                         <span class="input-group-text">₺</span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">Çalışan Maaşı</label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" class="form-control" id="staffSalary" value="15000" min="0" step="1">
+                                        <span class="input-group-text">₺</span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">Hayvan Başına Çalışan</label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" class="form-control" id="staffPerAnimal" value="30" min="1" step="1">
+                                        <span class="input-group-text">adet</span>
                                     </div>
                                 </div>
                                 <div class="col-12 text-center mt-2">
@@ -1119,6 +1133,8 @@
                     feed_cost_per_cow: parseFloat(document.getElementById('feedCostPerCow').value),
                     calf_feed_ratio: parseFloat(document.getElementById('calfFeedRatio').value) / 100, // Yüzdeyi ondalık sayıya çevir
                     other_expenses: parseFloat(document.getElementById('otherExpenses').value),
+                    staff_salary: parseFloat(document.getElementById('staffSalary').value),
+                    staff_per_animal: parseInt(document.getElementById('staffPerAnimal').value),
                     // Yeni inek parametreleri
                     cow_source_type: document.getElementById('cowSourceType').value,
                     new_cow_price: parseFloat(document.getElementById('newCowPrice').value),
@@ -1178,6 +1194,8 @@
                     feed_cost_per_cow: parseFloat(document.getElementById('feedCostPerCow').value),
                     calf_feed_ratio: parseFloat(document.getElementById('calfFeedRatio').value) / 100,
                     other_expenses: parseFloat(document.getElementById('otherExpenses').value),
+                    staff_salary: parseFloat(document.getElementById('staffSalary').value),
+                    staff_per_animal: parseInt(document.getElementById('staffPerAnimal').value),
                     // Otomatik inek ekleme parametreleri
                     auto_add_cows: document.getElementById('autoAddCows').checked,
                     female_cow_threshold: parseInt(document.getElementById('femaleCowThreshold').value),
@@ -1492,4 +1510,4 @@
         });
     </script>
 </body>
-</html> 
+</html>

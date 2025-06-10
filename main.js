@@ -81,6 +81,8 @@ ipcMain.on('update-financials', (event, financialParams) => {
         feed_cost_per_cow: financialParams.feed_cost_per_cow,
         calf_feed_ratio: financialParams.calf_feed_ratio,
         other_expenses: financialParams.other_expenses,
+        staff_salary: financialParams.staff_salary,
+        staff_per_animal: financialParams.staff_per_animal,
         // Yeni inek parametreleri
         cow_source_type: financialParams.cow_source_type,
         new_cow_price: financialParams.new_cow_price,
@@ -140,4 +142,4 @@ function calculateHerd(params, event, saveState = false, updateFinancials = fals
             event.reply('calculation-error', 'Sonuçlar işlenirken bir hata oluştu.');
         }
     });
-} 
+}

@@ -38,7 +38,8 @@ class HerdManager:
                  max_auto_add_cows=3, cow_source_type='external',
                  new_cow_price=75000, herd_size_limit=None, old_cow_price=50000,
                  enable_deaths=False, monthly_cow_death_rate=0.5, monthly_calf_death_rate=0.5,
-                 enable_cow_addition=True, cow_addition_frequency=1):
+                 enable_cow_addition=True, cow_addition_frequency=1,
+                 staff_salary=15000, staff_per_animal=30):
         self.cows: List[Cow] = []
         self.calves: List[Calf] = []
         self.current_date = datetime(start_year, start_month, 1)
@@ -90,6 +91,10 @@ class HerdManager:
         self.enable_deaths = enable_deaths  # Ölüm özelliği açık/kapalı
         self.monthly_cow_death_rate = monthly_cow_death_rate  # Aylık inek ölüm oranı (%)
         self.monthly_calf_death_rate = monthly_calf_death_rate  # Aylık buzağı ölüm oranı (%)
+        
+        # Personel giderleri
+        self.staff_salary = staff_salary  # Aylık çalışan maaşı
+        self.staff_per_animal = staff_per_animal  # Hayvan başına çalışan sayısı
         
         # Initialize with initial cows - Başlangıçtaki inekler doğum yapmış kabul edilir
         for _ in range(initial_cow_count):
@@ -451,11 +456,23 @@ class HerdManager:
             if self.auto_add_cows:
                 new_cow_cost += float(auto_added_cows) * float(self.new_cow_price)
         
-        # 4. Diğer giderler (sabit giderler)
+        # 4. Personel giderleri
+        if total_cows is None:
+            total_cows = sum(1 for cow in self.cows if not cow.is_dead)
+        if total_calves is None:
+            total_calves = sum(1 for calf in self.calves if not calf.is_dead)
+        total_animals = total_cows + total_calves
+        
+        # Tamamlanan her "staff_per_animal" sayısı için bir çalışan eklenir.
+        staff_count = total_animals // self.staff_per_animal
+        
+        staff_expense = staff_count * self.staff_salary
+        
+        # 5. Diğer giderler (sabit giderler)
         other_expenses = float(self.other_expenses)
         
-        # Toplam gider = İnek yem gideri + Buzağı yem gideri + Yeni inek maliyeti + Diğer giderler
-        total_expenses = monthly_feed_cost + monthly_calf_feed_cost + new_cow_cost + other_expenses
+        # Toplam gider = İnek yem gideri + Buzağı yem gideri + Yeni inek maliyeti + Personel gideri + Diğer giderler
+        total_expenses = monthly_feed_cost + monthly_calf_feed_cost + new_cow_cost + staff_expense + other_expenses
         
         return total_expenses
     
@@ -489,7 +506,6 @@ class HerdManager:
         current_removed_males = self.total_removed_male_calves - previous_removed_males
         current_removed_old_cows = self.total_removed_old_cows - previous_removed_old_cows
         
-        # --- DÜZELTME BAŞLANGICI ---
         # Gider hesaplaması için gerekli olan "ekleme ayı" ve "otomatik eklenen" bilgilerini hesapla
         is_addition_month = self.enable_cow_addition and self.cow_source_type == 'internal' and self.months_since_last_addition == 0
         
@@ -508,7 +524,6 @@ class HerdManager:
             auto_added_cows=auto_added_cows
         )
         profit = income - expenses
-        # --- DÜZELTME SONU ---
         
         return {
             'date': self.current_date.strftime('%Y-%m'),
@@ -539,7 +554,8 @@ class HerdManager:
                          calf_feed_ratio, other_expenses, cow_source_type='external', new_cow_price=75000,
                          herd_size_limit=None, old_cow_price=50000, enable_deaths=False,
                          monthly_cow_death_rate=0.5, monthly_calf_death_rate=0.5,
-                         enable_cow_addition=True, cow_addition_frequency=1):
+                         enable_cow_addition=True, cow_addition_frequency=1,
+                         staff_salary=15000, staff_per_animal=30):
         """
         Finansal parametreleri güncelle ve tüm ayların hesaplamalarını yeniden yap
         """
@@ -559,6 +575,8 @@ class HerdManager:
         self.monthly_calf_death_rate = float(monthly_calf_death_rate)
         self.enable_cow_addition = enable_cow_addition
         self.cow_addition_frequency = int(cow_addition_frequency) # Gelen yeni değeri al
+        self.staff_salary = float(staff_salary)
+        self.staff_per_animal = int(staff_per_animal)
 
         # 2. Tüm ayların finansal verilerini yeniden hesapla
         updated_stats = []
@@ -636,7 +654,9 @@ def main():
             monthly_calf_death_rate=params.get('monthly_calf_death_rate', 0.5),
             # Bu iki parametrenin doğru alındığından emin oluyoruz
             enable_cow_addition=params.get('enable_cow_addition', True),
-            cow_addition_frequency=params.get('cow_addition_frequency', 1)
+            cow_addition_frequency=params.get('cow_addition_frequency', 1),
+            staff_salary=params.get('staff_salary', 15000),
+            staff_per_animal=params.get('staff_per_animal', 30)
         )
         print(json.dumps(results))
         sys.exit(0)
@@ -670,9 +690,11 @@ def main():
         old_cow_price=params.get('old_cow_price', 50000),
         enable_deaths=params.get('enable_deaths', False),
         monthly_cow_death_rate=params.get('monthly_cow_death_rate', 0.5),
-        monthly_calf_death_rate=params.get('monthly_calf_death_rate', 0.5),
-        enable_cow_addition=params.get('enable_cow_addition', True),
-        cow_addition_frequency=params.get('cow_addition_frequency', 1)
+            monthly_calf_death_rate=params.get('monthly_calf_death_rate', 0.5),
+            enable_cow_addition=params.get('enable_cow_addition', True),
+            cow_addition_frequency=params.get('cow_addition_frequency', 1),
+            staff_salary=params.get('staff_salary', 15000),
+            staff_per_animal=params.get('staff_per_animal', 30)
     )
     
     # Calculate results for specified number of months
