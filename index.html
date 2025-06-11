@@ -72,6 +72,11 @@
             display: flex;
             flex-direction: column;
             height: 100%;
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+        .parameters-sidebar *::-webkit-scrollbar {
+            display: none;
         }
         .sidebar-header {
             padding: 0.75rem 1rem;
@@ -154,12 +159,26 @@
         .td-vertical-middle {
             vertical-align: middle;
         }
+        #parametersAccordion {
+            overflow-y: auto; /* Dikey kaydırmaya izin ver */
+            
+            /* Firefox için kaydırma çubuğunu gizle */
+            scrollbar-width: none;
+            
+            /* Internet Explorer ve Edge için kaydırma çubuğunu gizle */
+            -ms-overflow-style: none;
+            }
+
+            /* Chrome, Safari, Edge ve Electron (WebKit) için kaydırma çubuğunu gizle */
+            #parametersAccordion::-webkit-scrollbar {
+            display: none;
+            }
     </style>
 </head>
 <body>
     <div class="titlebar">
         <div class="titlebar-left">
-            <svg class="titlebar-icon" viewBox="0 0 24 24"><use href="assets/icon.svg#icon"></use></svg>
+            <img src="assets/icon.png" class="titlebar-icon" alt="Uygulama İkonu">
             <div class="titlebar-title">HerdSIM</div>
         </div>
         <div class="titlebar-right">
@@ -445,7 +464,8 @@
                 const tableHTML = document.querySelector('.table-responsive').innerHTML;
                 const theme = document.documentElement.getAttribute('data-bs-theme');
                 const styles = Array.from(document.styleSheets).map(sheet => { try { return Array.from(sheet.cssRules).map(rule => rule.cssText).join(''); } catch (e) { return ''; } }).join('');
-                ipcRenderer.send('export-to-pdf', { body: tableHTML, styles: styles, theme: theme });
+                const calculationParams = getFormValues(); // Get current form values
+                ipcRenderer.send('export-to-pdf', { body: tableHTML, styles: styles, theme: theme, params: calculationParams });
             });
 
             ipcRenderer.on('pdf-export-complete', (event, result) => {
