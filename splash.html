@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Yükleniyor...</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: transparent; /* Koyu tema arkaplanıyla uyumlu bir renk */
+            overflow: hidden;
+            -webkit-app-region: drag; /* Pencereyi sürüklemeye izin ver (opsiyonel) */
+        }
+        /* İkonun etrafındaki dönme animasyonu */
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        img {
+            width: 256px;
+            height: 256px;
+            animation: spin 2s linear infinite; /* Sonsuz dönme efekti */
+        }
+    </style>
+</head>
+<body>
+    <img src="assets/icon.png" alt="Yükleniyor...">
+</body>
+</html>

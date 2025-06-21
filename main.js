@@ -1,16 +1,29 @@
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell} = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
 const fs = require('fs');
 
+// Pencere değişkenlerini global olarak tanımla
 let mainWindow;
-let lastCalculationParams = null;  // Son hesaplama parametrelerini saklayacak değişken
-let lastHerdState = null;  // Son sürü durumunu saklayacak değişken
+let splashWindow;
 
-function createWindow() {
+function createWindows() {
+    // 1. Başlangıç Ekranı Penceresini (splashWindow) oluştur
+    splashWindow = new BrowserWindow({
+        width: 400,
+        height: 300,
+        transparent: true, // Pencerenin arkaplanını saydam yapabilir
+        frame: false,      // Pencere çerçevesini kaldır
+        alwaysOnTop: true, // Her zaman üstte kal
+        center: true       // Ekranda ortala
+    });
+    splashWindow.loadFile('splash.html');
+
+    // 2. Ana Pencereyi (mainWindow) oluştur ama gösterme (show: false)
     mainWindow = new BrowserWindow({
         width: 1600,
         height: 900,
+        show: false, // Arka planda yüklenmesi için başlangıçta gizli tut
         frame: false,
         icon: path.join(__dirname, 'assets/icon.png'),
         webPreferences: {
@@ -20,10 +33,18 @@ function createWindow() {
     });
 
     mainWindow.loadFile('index.html');
-    // mainWindow.webContents.openDevTools();
+
+    // 3. Ana pencere tamamen yüklenip gösterilmeye hazır olduğunda...
+    mainWindow.once('ready-to-show', () => {
+        // Ufak bir gecikme, geçişin daha pürüzsüz görünmesini sağlayabilir
+        setTimeout(() => {
+            splashWindow.destroy(); // Başlangıç ekranını kapat
+            mainWindow.show();      // Ana pencereyi göster
+        }, 200); // 200 milisaniye bekle
+    });
 }
 
-// PDF Dışa Aktarma İşlemi
+// PDF Dışa Aktarma İşlemi (Bu fonksiyon aynı kalıyor)
 ipcMain.on('export-to-pdf', (event, content) => {
   const pdfWindow = new BrowserWindow({
     show: false,
@@ -32,6 +53,16 @@ ipcMain.on('export-to-pdf', (event, content) => {
       contextIsolation: true
     }
   });
+ipcMain.on('open-file', (event, filePath) => {
+    // shell.openPath, verilen dosya yolunu sistemin varsayılan uygulamasıyla açar.
+    // Örneğin .pdf dosyaları için Adobe Reader, web tarayıcısı vb.
+    shell.openPath(filePath)
+        .catch(err => {
+            // Hata olursa konsola yazdır.
+            console.error("Dosya açılamadı:", err);
+            // İsteğe bağlı olarak kullanıcıya bir hata mesajı da gösterebilirsiniz.
+        });
+});
 
   const paramLabels = {
     initialCowCount: "Başlangıç İnek Sayısı",
@@ -69,7 +100,11 @@ ipcMain.on('export-to-pdf', (event, content) => {
     enableCowAddition: "Periyodik İnek Ekleme Aktif",
     cowAdditionFrequency: "İnek Ekleme Sıklığı",
     staffSalary: "Çalışan Maaşı",
-    staffPerAnimal: "Çalışan/Hayvan Oranı"
+    staffPerAnimal: "Çalışan/Hayvan Oranı",
+    enableProfitBasedPurchase: "Kardan Otomatik Alım",
+    profitThresholdForPurchase: "Kar Eşiği",
+    maxProfitBasedPurchase: "Maks. Kardan Alım Limiti",
+    stopPurchaseAtLimit: "Limitte Alımı Durdur"
   };
 
   function formatParamValue(key, value) {
@@ -77,15 +112,15 @@ ipcMain.on('export-to-pdf', (event, content) => {
       return value ? 'Evet' : 'Hayır';
     }
     if (key === 'calfFeedRatio') {
-      return `${(value * 100).toFixed(0)}%`;
+        return value ? `${(value * 100).toFixed(0)}%` : '0%';
     }
-    if (['milkPrice', 'maleCalf', 'feedCostPerCow', 'otherExpenses', 'newCowPrice', 'oldCowPrice', 'staffSalary'].includes(key)) {
+    if (['milkPrice', 'maleCalf', 'feedCostPerCow', 'otherExpenses', 'newCowPrice', 'oldCowPrice', 'staffSalary', 'profitThresholdForPurchase'].includes(key)) {
       return `${parseFloat(value).toLocaleString('tr-TR')} ₺`;
     }
     if (['birthSuccessRate', 'monthlyCowDeathRate', 'monthlyCalfDeathRate'].includes(key)) {
       return `${parseFloat(value)}%`;
     }
-    if (['startYear', 'startMonth', 'months', 'summaryPeriod', 'initialCowCount', 'initialPregnancyMonth', 'calfMaturityAge', 'postBirthWait', 'milkingThreshold', 'maleCalfRemovalAge', 'monthlyCows', 'cowAdditionFrequency', 'newCowPregnancyMonth', 'femaleCowThreshold', 'maxAutoAddCows', 'staffPerAnimal', 'herdSizeLimit'].includes(key)) {
+    if (['startYear', 'startMonth', 'months', 'summaryPeriod', 'initialCowCount', 'initialPregnancyMonth', 'calfMaturityAge', 'postBirthWait', 'milkingThreshold', 'maleCalfRemovalAge', 'monthlyCows', 'cowAdditionFrequency', 'newCowPregnancyMonth', 'femaleCowThreshold', 'maxAutoAddCows', 'staffPerAnimal', 'herdSizeLimit', 'maxProfitBasedPurchase'].includes(key)) {
       return value === null || value === '' ? 'Belirtilmemiş' : `${value}`;
     }
     if (key === 'cowSourceType') {
@@ -167,7 +202,8 @@ ipcMain.on('export-to-pdf', (event, content) => {
   });
 });
 
-app.whenReady().then(createWindow);
+// Uygulama hazır olduğunda createWindow yerine createWindows'u çağır
+app.whenReady().then(createWindows);
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
@@ -176,91 +212,46 @@ app.on('window-all-closed', () => {
 });
 
 app.on('activate', () => {
+    // Eğer uygulama aktifken hiç pencere yoksa yeniden oluştur
     if (BrowserWindow.getAllWindows().length === 0) {
-        createWindow();
+        createWindows();
     }
 });
 
+// Pencere kontrol butonları artık 'mainWindow' üzerinde çalışmalı
 ipcMain.on('minimize-window', () => {
-    mainWindow.minimize();
+    if(mainWindow) mainWindow.minimize();
 });
 
 ipcMain.on('maximize-window', () => {
-    if (mainWindow.isMaximized()) {
-        mainWindow.unmaximize();
-    } else {
-        mainWindow.maximize();
+    if(mainWindow) {
+        if (mainWindow.isMaximized()) {
+            mainWindow.unmaximize();
+        } else {
+            mainWindow.maximize();
+        }
     }
 });
 
 ipcMain.on('close-window', () => {
-    mainWindow.close();
+    if(mainWindow) mainWindow.close();
 });
 
-ipcMain.on('reset-calculations', () => {
-    lastCalculationParams = null;
-    lastHerdState = null;
-});
-
+// Hesaplama IPC dinleyicisi aynı kalıyor
 ipcMain.on('calculate-herd', (event, params) => {
-    lastCalculationParams = params;
-    calculateHerd(params, event, true);
+    calculateHerd(params, event);
 });
 
-ipcMain.on('update-financials', (event, financialParams) => {
-    if (!lastCalculationParams || !lastHerdState) {
-        event.reply('calculation-error', 'Önce bir hesaplama yapmalısınız!');
-        return;
-    }
-
-    const updatedParams = {
-        herd_state: Buffer.from(lastHerdState, 'binary').toString('base64'),
-        milk_per_cow: financialParams.milk_per_cow,
-        milk_price: financialParams.milk_price,
-        male_calf_price: financialParams.male_calf_price,
-        feed_cost_per_cow: financialParams.feed_cost_per_cow,
-        calf_feed_ratio: financialParams.calf_feed_ratio,
-        other_expenses: financialParams.other_expenses,
-        staff_salary: financialParams.staff_salary,
-        staff_per_animal: financialParams.staff_per_animal,
-        cow_source_type: financialParams.cow_source_type,
-        new_cow_price: financialParams.new_cow_price,
-        enable_cow_addition: financialParams.enable_cow_addition,
-        cow_addition_frequency: financialParams.cow_addition_frequency,
-        herd_size_limit: financialParams.herd_size_limit,
-        old_cow_price: financialParams.old_cow_price,
-        enable_deaths: financialParams.enable_deaths,
-        monthly_cow_death_rate: financialParams.monthly_cow_death_rate,
-        monthly_calf_death_rate: financialParams.monthly_calf_death_rate
-    };
-
-    calculateHerd(updatedParams, event, false, true);
-});
-
-// ===================================================================
-// GÜNCELLENMİŞ FONKSİYON
-// ===================================================================
-function calculateHerd(params, event, saveState = false, updateFinancials = false) {
+// calculateHerd fonksiyonu aynı kalıyor
+function calculateHerd(params, event) {
     const executableName = 'herd_calculator.exe';
     
-    // Uygulama paketlendiğinde (`.exe` olarak çalışırken) ve geliştirme ortamında
-    // çalıştırılabilir dosyanın yolunu doğru şekilde belirler.
     const scriptPath = app.isPackaged
       ? path.join(process.resourcesPath, executableName)
       : path.join(__dirname, executableName);
 
-    // Argümanlar dizisinden 'herd_calculator.py' script adını kaldırıyoruz.
-    const pythonArgs = [JSON.stringify({
-        ...params,
-        enable_cow_addition: params.enable_cow_addition !== undefined ? params.enable_cow_addition : true,
-        cow_addition_frequency: params.cow_addition_frequency || 1
-    })];
+    const pythonArgs = [JSON.stringify(params)];
     
-    if (updateFinancials) {
-        pythonArgs.push('update_financials');
-    }
-    
-    // `spawn` komutu artık 'python' yerine doğrudan çalıştırılabilir dosyanın yolunu (`scriptPath`) kullanır.
     const pythonProcess = spawn(scriptPath, pythonArgs);
     
     let result = '';
@@ -272,7 +263,7 @@ function calculateHerd(params, event, saveState = false, updateFinancials = fals
 
     pythonProcess.stderr.on('data', (data) => {
         error += data.toString();
-        console.error(`Python Hata Çıktısı: ${data}`); // Hata ayıklama için
+        console.error(`Python Hata Çıktısı: ${data}`);
     });
 
     pythonProcess.on('close', (code) => {
@@ -285,9 +276,6 @@ function calculateHerd(params, event, saveState = false, updateFinancials = fals
 
         try {
             const calculationResults = JSON.parse(result);
-            if (saveState) {
-                lastHerdState = Buffer.from(calculationResults.pop().herd_state, 'base64').toString('binary');
-            }
             event.reply('calculation-results', calculationResults);
         } catch (e) {
             console.error(`JSON parse hatası: ${e.message}`);
