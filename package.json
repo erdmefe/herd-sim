@@ -1,6 +1,6 @@
 {
   "name": "HerdSIM",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Süt İnekçiliği Sürü Hesaplayıcı",
   "main": "main.js",
   "scripts": {

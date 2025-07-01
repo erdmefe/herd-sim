@@ -253,7 +253,10 @@ class HerdManager:
         provisional_income = self.calculate_income(
             milking_cows=sum(1 for c in self.cows if c.is_milking and not c.is_dead)
         )
-        provisional_expenses = self.calculate_expenses(is_addition_month=self.months_since_last_addition == 0)
+        provisional_expenses = self.calculate_expenses(
+            is_addition_month=self.months_since_last_addition == 0,
+            auto_added_cows=self.auto_added_this_month
+        )
         provisional_profit = provisional_income - provisional_expenses
 
         cows_to_buy = 0
@@ -289,7 +292,6 @@ class HerdManager:
         for cow in self.cows:
             if not cow.is_dead:
                 cow.age_months += 1
-
         new_calves = []
         
         for cow in self.cows:
@@ -334,6 +336,10 @@ class HerdManager:
                         cow.is_milking = cow.has_given_birth
                 
                 cow.is_milking = cow.has_given_birth
+
+        # Bu ay doğan dişi ve erkek buzağıları say
+        born_female_this_month = sum(1 for calf in new_calves if calf.is_female)
+        born_male_this_month = len(new_calves) - born_female_this_month
 
         self.calves.extend(new_calves)
 
@@ -391,7 +397,9 @@ class HerdManager:
         self.monthly_stats.append(self.get_statistics(
             cows_bought_with_profit=cows_bought_this_month,
             cows_at_start=cows_before_profit_purchase,
-            calves_at_start=calves_before_profit_purchase
+            calves_at_start=calves_before_profit_purchase,
+            born_female_calves_this_month=born_female_this_month,
+            born_male_calves_this_month=born_male_this_month
         ))
 
     def calculate_income(self, milking_cows, removed_male_calves=None, current_removed_old_cows=None):
@@ -449,7 +457,10 @@ class HerdManager:
                           staff_expense + other_expenses + profit_purchase_cost)
         return total_expenses
 
-    def get_statistics(self, cows_bought_with_profit=0, cows_at_start=0, calves_at_start=0):
+    def get_statistics(self, cows_bought_with_profit=0, cows_at_start=0, 
+                       calves_at_start=0, 
+                       born_female_calves_this_month=0, 
+                       born_male_calves_this_month=0):
         milking_cows = sum(1 for cow in self.cows if cow.is_milking and not cow.is_dead)
         dry_cows = sum(1 for cow in self.cows if not cow.is_milking and cow.has_given_birth and not cow.is_dead)
         pregnant_heifers = sum(1 for cow in self.cows if cow.is_pregnant and not cow.has_given_birth and not cow.is_dead)
@@ -459,6 +470,8 @@ class HerdManager:
         total_cows = sum(1 for c in self.cows if not c.is_dead)
         total_calves = sum(1 for c in self.calves if not c.is_dead)
         total_animals = total_cows + total_calves
+
+        staff_count = total_animals // self.staff_per_animal if self.staff_per_animal > 0 else 0
 
         milking_ratio = round((milking_cows / total_cows * 100) if total_cows > 0 else 0, 1)
         
@@ -480,7 +493,12 @@ class HerdManager:
         manual_cows_added_this_month = self.monthly_new_cows if is_addition_month and self.enable_cow_addition else 0
 
         income = self.calculate_income(milking_cows, current_removed_males, current_removed_old_cows)
-        expenses = self.calculate_expenses()
+        expenses = self.calculate_expenses(
+            total_cows=total_cows,
+            total_calves=total_calves,
+            is_addition_month=is_addition_month,
+            auto_added_cows=auto_added_cows
+        )
         profit = income - expenses
         
         self.profit_purchase_expense = 0
@@ -494,6 +512,7 @@ class HerdManager:
             'female_calves': female_calves,
             'male_calves': male_calves,
             'total_animals': total_animals,
+            'staff_count': staff_count,
             'total_removed_male_calves': self.total_removed_male_calves,
             'total_removed_old_cows': self.total_removed_old_cows,
             'current_removed_old_cows': current_removed_old_cows,
@@ -509,6 +528,8 @@ class HerdManager:
             'total_dead_calves': self.total_dead_calves,
             'monthly_dead_cows': self.monthly_dead_cows,
             'monthly_dead_calves': self.monthly_dead_calves,
+            'born_female_calves_this_month': born_female_calves_this_month,
+            'born_male_calves_this_month': born_male_calves_this_month,
             'is_addition_month': is_addition_month,
             'cows_bought_with_profit': cows_bought_with_profit,
             'cows_at_start': cows_at_start,

@@ -5,160 +5,25 @@
     <title>HerdSIM</title>
     <link href="node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    
+    <link rel="stylesheet" href="assets/css/style.css">
     <style>
-        :root {
-            --titlebar-bg: #f8f9fa;
-            --titlebar-color: #495057;
-            --titlebar-hover: #e9ecef;
-            --titlebar-close-hover: #dc3545;
-            --sidebar-bg: #f8f9fa;
-            --sidebar-border: #dee2e6;
+        .data-row {
+            cursor: pointer;
         }
-
-        [data-bs-theme="dark"] {
-            --titlebar-bg: #212529;
-            --titlebar-color: #e9ecef;
-            --titlebar-hover: #343a40;
-            --titlebar-close-hover: #dc3545;
-            --sidebar-bg: #2b3035;
-            --sidebar-border: #343a40;
+        .stat-box {
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            background-color: var(--bs-secondary-bg);
+            border: 1px solid var(--bs-border-color-translucent);
         }
-
-        body {
-            overflow: hidden;
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
+        .stat-value {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: var(--bs-primary);
         }
-        
-        .titlebar {
-            position: fixed; top: 0; left: 0; right: 0; height: 32px; background-color: var(--titlebar-bg);
-            color: var(--titlebar-color); display: flex; align-items: center; justify-content: space-between;
-            padding: 0 12px; -webkit-app-region: drag; z-index: 1050; border-bottom: 1px solid var(--sidebar-border);
-            font-size: 13px;
-        }
-        .titlebar-left { display: flex; align-items: center; flex: 1; }
-        .titlebar-right { display: flex; align-items: center; justify-content: flex-end; }
-        .titlebar-icon { width: 16px; height: 16px; margin-right: 8px; color: var(--titlebar-color); }
-        .titlebar-title { font-weight: 500; flex-grow: 1; }
-        .window-controls { -webkit-app-region: no-drag; display: flex; height: 100%; }
-        .window-control-btn { background: none; border: none; color: var(--titlebar-color); width: 46px; height: 100%; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background-color 0.2s; }
-        .window-control-btn:hover { background-color: var(--titlebar-hover); }
-        .window-control-btn.close:hover { background-color: var(--titlebar-close-hover); color: white; }
-        .theme-switch { display: flex; align-items: center; margin-right: 10px; -webkit-app-region: no-drag; }
-        .theme-switch .form-check.form-switch { min-height: unset; padding-left: 0; margin: 0; display: flex; align-items: center; }
-        .theme-switch .form-check-input { float: none; margin-left: 0; margin-right: 6px; cursor: pointer; width: 2em; height: 1em; }
-        .theme-switch .form-check-label { cursor: pointer; display: flex; align-items: center; color: var(--titlebar-color); }
-        .theme-switch .form-check-label i { font-size: 0.9rem; }
-
-        .app-container {
-            margin-top: 32px;
-            display: flex;
-            height: calc(100vh - 32px);
-            overflow: hidden;
-        }
-
-        .parameters-sidebar {
-            flex: 0 0 25%;
-            max-width: 25%;
-            min-width: 380px;
-            background-color: var(--sidebar-bg);
-            border-right: 1px solid var(--sidebar-border);
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-        .parameters-sidebar *::-webkit-scrollbar {
-            display: none;
-        }
-        .sidebar-header {
-            padding: 0.75rem 1rem;
-            border-bottom: 1px solid var(--sidebar-border);
-        }
-        .sidebar-header h5 {
-            margin: 0;
-            font-size: 1.1rem;
-            font-weight: 600;
-        }
-        .sidebar-content {
-            padding: 1rem;
-            overflow-y: auto;
-            flex-grow: 1;
-        }
-        .sidebar-footer {
-            padding: 0.75rem;
-            border-top: 1px solid var(--sidebar-border);
-            background-color: var(--sidebar-bg);
-        }
-
-        .accordion-item { background-color: transparent; border: 1px solid var(--bs-border-color); }
-        .accordion-button { font-weight: 600; font-size: 0.9rem; gap: 0.75rem; }
-        .accordion-button:not(.collapsed) { background-color: rgba(var(--bs-primary-rgb), 0.1); color: var(--bs-body-color); }
-        .accordion-body { padding: 1rem; }
-        .accordion-button:focus { box-shadow: none; }
-        .accordion-button::after { flex-shrink: 0; width: 1rem; height: 1rem; margin-left: auto; content: ""; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23212529'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e"); background-repeat: no-repeat; background-size: 1rem; transition: transform .2s ease-in-out; }
-        [data-bs-theme="dark"] .accordion-button::after { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ffffff'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e"); }
-        .accordion-button:not(.collapsed)::after { transform: rotate(-180deg); }
-        .section-divider { margin: 1.2rem 0; border-color: rgba(var(--bs-body-color-rgb), 0.2); }
-
-        .results-container { flex: 1; padding: 1rem; overflow-y: auto; display: flex; flex-direction: column;}
-        .results-card { height: 100%; margin: 0; display: flex; flex-direction: column; flex-grow: 1; }
-        .results-card .card-header { padding: 0.5rem 1rem; background-color: var(--sidebar-bg); border-bottom: 1px solid var(--sidebar-border); display: flex; justify-content: space-between; align-items: center; }
-        .results-card .card-body { padding: 0; flex: 1; }
-        .table-responsive { height: 100%; overflow: auto; }
-        .table thead th { position: sticky; top: 0; background: var(--bs-body-bg); z-index: 1; }
-
-        .form-label { font-weight: 500; font-size: 0.85rem; margin-bottom: 0.2rem; }
-        .form-control, .form-select { font-size: 0.85rem; padding: 0.25rem 0.5rem; height: calc(1.5em + 0.5rem + 2px); }
-        .input-group-sm > .form-control, .input-group-sm > .input-group-text { padding: 0.25rem 0.5rem; font-size: 0.85rem; }
-        .form-check { font-size: 0.8rem; padding-top: 0.25rem; }
-        .form-check-input { margin-top: 0.2rem; }
-        .input-group .btn { padding-top: var(--bs-form-select-padding-y); padding-bottom: var(--bs-form-select-padding-y); line-height: var(--bs-body-line-height); }
-
-        .ratio-progress { height: 24px; position: relative; background: rgba(0,0,0,0.05); border-radius: 4px; overflow: hidden; margin: 2px 0; }
-        [data-bs-theme="dark"] .ratio-progress { background: rgba(255,255,255,0.05); }
-        .ratio-progress .progress-bar { position: absolute; height: 100%; transition: width 0.3s ease; opacity: 0.8; }
-        .ratio-progress .progress-text { position: absolute; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 600; color: #000; z-index: 1; text-shadow: 0 0 2px rgba(255,255,255,0.8); user-select: none; }
-        [data-bs-theme="dark"] .ratio-progress .progress-text { color: #fff; text-shadow: 0 0 2px rgba(0,0,0,0.8); }
-        .ratio-progress .progress-bar.excellent { background: linear-gradient(90deg, #28a745, #34ce57); }
-        .ratio-progress .progress-bar.good { background: linear-gradient(90deg, #17a2b8, #1fc8e3); }
-        .ratio-progress .progress-bar.average { background: linear-gradient(90deg, #ffc107, #ffcd39); }
-        .ratio-progress .progress-bar.poor { background: linear-gradient(90deg, #dc3545, #e4606d); }
-        .table td .ratio-progress { min-width: 120px; }
-
-        .alert-container { position: fixed; top: 45px; left: 50%; transform: translateX(-50%); z-index: 1060; width: 100%; max-width: 500px; display: flex; flex-direction: column; align-items: center; pointer-events: none; }
-        .custom-alert { padding: 0.75rem 1rem; margin-bottom: 0.5rem; border: 1px solid transparent; border-radius: 6px; font-size: 0.875rem; display: flex; align-items: center; justify-content: space-between; opacity: 0; transform: translateY(-20px); transition: all 0.3s ease; background-color: var(--bs-body-bg); box-shadow: 0 2px 8px rgba(0,0,0,0.15); width: 100%; pointer-events: auto; }
-        .custom-alert.show { opacity: 1; transform: translateY(0); }
-        .custom-alert.alert-success { border-left: 4px solid var(--bs-success); }
-        .custom-alert.alert-danger { border-left: 4px solid var(--bs-danger); }
-        .custom-alert.alert-info { border-left: 4px solid var(--bs-info); }
-        .custom-alert .alert-content { display: flex; align-items: center; gap: 0.5rem; }
-        .custom-alert .close-btn { background: none; border: none; padding: 0; margin-left: 1rem; cursor: pointer; color: inherit; opacity: 0.7; }
-        .custom-alert .close-btn:hover { opacity: 1; }
-
-        .table-success-light { background-color: rgba(var(--bs-success-rgb), 0.1) !important; }
-        .table-danger-light { background-color: rgba(var(--bs-danger-rgb), 0.08) !important; }
-        .table .summary-row td {
-             border-top: 2px solid var(--bs-border-color);
-        }
-        .td-vertical-middle {
-            vertical-align: middle;
-        }
-        #parametersAccordion {
-            overflow-y: auto;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-        }
-        #parametersAccordion::-webkit-scrollbar {
-            display: none;
-        }
-        .alert-clickable {
-        cursor: pointer;
-        transition: background-color 0.2s ease-in-out;
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--bs-secondary-color);
         }
     </style>
 </head>
@@ -336,6 +201,12 @@
         </div>
 
         <div class="results-container">
+            <div class="loading-overlay">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Yükleniyor...</span>
+                </div>
+                <p class="mt-3 mb-0 fs-5">Hesaplama yapılıyor...</p>
+            </div>
             <div class="card results-card">
                 <div class="card-header">
                     <h6 class="mb-0">Hesaplama Sonuçları</h6>
@@ -355,6 +226,7 @@
                                     <th>D. Buzağı</th>
                                     <th data-bs-toggle="tooltip" title="Mevcut Erkek Buzağı / Toplam Satılan Erkek Buzağı">E. Buzağı</th>
                                     <th data-bs-toggle="tooltip" title="P:Periyodik, B:Buzağıdan, K:Kardan, S:Satılan Yaşlı">Top. Hayvan</th>
+                                    <th data-bs-toggle="tooltip" title="Aylık hesaplanan çalışan sayısı">Çalışan</th>
                                     <th>Ölen İ/B</th>
                                     <th>Gelir/Gider</th>
                                     <th>Kar/Zarar</th>
@@ -373,317 +245,61 @@
     <div class="modal fade" id="saveProfileModal" tabindex="-1" aria-labelledby="saveProfileModalLabel" aria-hidden="true"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h1 class="modal-title fs-5" id="saveProfileModalLabel">Profili Kaydet</h1><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body"><form><div class="mb-3"><label for="profileNameInput" class="col-form-label">Profil Adı:</label><input type="text" class="form-control" id="profileNameInput"></div></form></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button><button type="button" class="btn btn-primary" id="modalSaveBtn">Kaydet</button></div></div></div></div>
     <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h1 class="modal-title fs-5" id="deleteConfirmModalLabel">Profili Sil</h1><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body"><p>'<strong id="profileNameToDeleteSpan"></strong>' isimli profili silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.</p></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button><button type="button" class="btn btn-danger" id="modalDeleteBtn">Sil</button></div></div></div></div>
 
+    <div class="modal fade" id="monthDetailModal" tabindex="-1" aria-labelledby="monthDetailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="monthDetailModalLabel">Aylık Detaylar (<span id="modal-date"></span>)</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <h5><i class="bi bi-graph-up-arrow text-success"></i> Gelir Dökümü</h5>
+                            <ul class="list-group list-group-flush"><li class="list-group-item d-flex justify-content-between align-items-center">Süt Geliri <span class="badge bg-success rounded-pill" id="modal-milk-income"></span></li><li class="list-group-item d-flex justify-content-between align-items-center">Erkek Buzağı Satış Geliri <span class="badge bg-success rounded-pill" id="modal-male-calf-income"></span></li><li class="list-group-item d-flex justify-content-between align-items-center">Yaşlı İnek Satış Geliri <span class="badge bg-success rounded-pill" id="modal-old-cow-income"></span></li><li class="list-group-item d-flex justify-content-between align-items-center fw-bold">Toplam Gelir <span class="badge bg-primary rounded-pill" id="modal-total-income"></span></li></ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h5><i class="bi bi-graph-down-arrow text-danger"></i> Gider Dökümü</h5>
+                            <ul class="list-group list-group-flush"><li class="list-group-item d-flex justify-content-between align-items-center">Yem Gideri (İnek+Buzağı) <span class="badge bg-danger rounded-pill" id="modal-feed-cost"></span></li><li class="list-group-item d-flex justify-content-between align-items-center">Personel Gideri <span class="badge bg-danger rounded-pill" id="modal-staff-cost"></span></li><li class="list-group-item d-flex justify-content-between align-items-center">Hayvan Alım Gideri <span class="badge bg-danger rounded-pill" id="modal-purchase-cost"></span></li><li class="list-group-item d-flex justify-content-between align-items-center">Diğer Giderler <span class="badge bg-danger rounded-pill" id="modal-other-expenses"></span></li><li class="list-group-item d-flex justify-content-between align-items-center fw-bold">Toplam Gider <span class="badge bg-primary rounded-pill" id="modal-total-expenses"></span></li></ul>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="stat-box text-center">
+                                <div class="stat-label">Aylık Net Kar/Zarar</div>
+                                <div class="stat-value" id="modal-net-profit"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                    <h5><i class="bi bi-arrows-move"></i> Aylık Hareketler</h5>
+                    <div class="row text-center g-2">
+                        <div class="col"><div class="stat-box"><div class="stat-value" id="modal-born-female-calves">0</div><div class="stat-label">Doğan Dişi Buzağı</div></div></div>
+                        <div class="col"><div class="stat-box"><div class="stat-value" id="modal-born-male-calves">0</div><div class="stat-label">Doğan Erkek Buzağı</div></div></div>
+                        <div class="col"><div class="stat-box"><div class="stat-value" id="modal-added-cows">0</div><div class="stat-label">Eklenen İnek</div></div></div>
+                        <div class="col"><div class="stat-box"><div class="stat-value" id="modal-sold-calves">0</div><div class="stat-label" data-bs-toggle="tooltip" title="O aya kadar satılan toplam erkek buzağı sayısı">Satılan Buzağı (Top.)</div></div></div>
+                        <div class="col"><div class="stat-box"><div class="stat-value" id="modal-sold-old-cows">0</div><div class="stat-label">Satılan Yaşlı İnek</div></div></div>
+                    </div>
+                    <div id="modal-additions-detail" class="text-muted text-center small mt-2" style="min-height: 1.2em;"></div>
+                    <hr>
+                    <h5><i class="bi bi-bar-chart-line"></i> Ay Sonu Sürü Durumu</h5>
+                    <div class="row text-center g-2">
+                        <div class="col-4 col-md-2"><div class="stat-box"><div class="stat-value" id="modal-total-animals"></div><div class="stat-label">Top. Hayvan</div></div></div>
+                        <div class="col-4 col-md-2"><div class="stat-box"><div class="stat-value" id="modal-milking-cows"></div><div class="stat-label">Sağılan İnek</div></div></div>
+                        <div class="col-4 col-md-2"><div class="stat-box"><div class="stat-value" id="modal-dry-cows"></div><div class="stat-label">Kuru İnek</div></div></div>
+                        <div class="col-4 col-md-2"><div class="stat-box"><div class="stat-value" id="modal-pregnant-heifers"></div><div class="stat-label">Gebe Düve</div></div></div>
+                        <div class="col-4 col-md-2"><div class="stat-box"><div class="stat-value" id="modal-female-calves"></div><div class="stat-label">Dişi Buzağı</div></div></div>
+                        <div class="col-4 col-md-2"><div class="stat-box"><div class="stat-value" id="modal-male-calves"></div><div class="stat-label">Erkek Buzağı</div></div></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        const { ipcRenderer } = require('electron');
-
-        let saveProfileModal;
-        let deleteConfirmModal;
-        let profileToDelete = null;
-        let originalHerdStats = [];
-
-        function toggleRelatedInputs(switchId, relatedIds, reverseLogic = false, parentSelector = '.col-6, .col-12') {
-            const switchEl = document.getElementById(switchId);
-            if (!switchEl) return;
-            const relatedElements = relatedIds.map(id => document.getElementById(id));
-            function updateState() {
-                const isDisabled = reverseLogic ? switchEl.checked : !switchEl.checked;
-                relatedElements.forEach(el => {
-                    if (el) {
-                        el.disabled = isDisabled;
-                        const parentContainer = el.closest(parentSelector) || el.closest('.form-check');
-                        if (parentContainer) {
-                            parentContainer.style.opacity = isDisabled ? '0.6' : '1';
-                            parentContainer.style.pointerEvents = isDisabled ? 'none' : 'auto';
-                        }
-                    }
-                });
-            }
-            switchEl.addEventListener('change', updateState);
-            updateState();
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            saveProfileModal = new bootstrap.Modal(document.getElementById('saveProfileModal'));
-            deleteConfirmModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
-            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-            const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
-
-            document.getElementById('minimizeBtn').addEventListener('click', () => { ipcRenderer.send('minimize-window'); });
-            document.getElementById('maximizeBtn').addEventListener('click', () => { ipcRenderer.send('maximize-window'); });
-            document.getElementById('closeBtn').addEventListener('click', () => { ipcRenderer.send('close-window'); });
-
-            initializeProfileSystem();
-
-            const themeSwitch = document.getElementById('themeSwitch');
-            const html = document.documentElement;
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme) {
-                html.setAttribute('data-bs-theme', savedTheme);
-                themeSwitch.checked = savedTheme === 'dark';
-            }
-            themeSwitch.addEventListener('change', function() {
-                const theme = this.checked ? 'dark' : 'light';
-                html.setAttribute('data-bs-theme', theme);
-                localStorage.setItem('theme', theme);
-            });
-            
-            toggleRelatedInputs('enableCowAddition', ['monthlyCows', 'cowAdditionFrequency', 'newCowPregnancyMonth', 'randomMonthlyPregnancy'], false);
-            toggleRelatedInputs('autoAddCows', ['femaleCowThreshold', 'maxAutoAddCows'], false);
-            toggleRelatedInputs('enableDeaths', ['monthlyCowDeathRate', 'monthlyCalfDeathRate'], false);
-            toggleRelatedInputs('randomInitialPregnancy', ['initialPregnancyMonth'], true);
-            toggleRelatedInputs('randomMonthlyPregnancy', ['newCowPregnancyMonth'], true);
-            toggleRelatedInputs('enableProfitBasedPurchase', ['profitThresholdForPurchase', 'maxProfitBasedPurchase'], false);
-
-            document.getElementById('resetTableBtn').addEventListener('click', resetTable);
-            document.getElementById('calculatorForm').addEventListener('submit', runFullCalculation);
-            document.getElementById('updateFinancials').addEventListener('click', runFinancialRecalculation);
-            document.getElementById('saveProfileBtn').addEventListener('click', openSaveProfileModal);
-            document.getElementById('modalSaveBtn').addEventListener('click', executeSaveProfile);
-            document.getElementById('deleteProfileBtn').addEventListener('click', openDeleteConfirmModal);
-            document.getElementById('modalDeleteBtn').addEventListener('click', executeDeleteProfile); 
-            document.getElementById('resetInputsBtn').addEventListener('click', () => {
-                const selectedProfile = document.getElementById('profileSelector').value;
-                if (selectedProfile) { loadProfile(selectedProfile); showAlert(`'${selectedProfile}' profili yeniden yüklendi.`, 'info'); }
-            });
-            document.getElementById('profileSelector').addEventListener('change', (e) => loadProfile(e.target.value));
-
-            document.getElementById('exportPdfBtn').addEventListener('click', () => {
-                const tableBody = document.getElementById('resultsTable');
-                if (tableBody.rows.length === 0) {
-                    showAlert('Dışa aktarılacak veri bulunmuyor.', 'info');
-                    return;
-                }
-                const tableHTML = document.querySelector('.table-responsive').innerHTML;
-                const theme = document.documentElement.getAttribute('data-bs-theme');
-                const styles = Array.from(document.styleSheets).map(sheet => { try { return Array.from(sheet.cssRules).map(rule => rule.cssText).join(''); } catch (e) { return ''; } }).join('');
-                const calculationParams = getFormValues();
-                ipcRenderer.send('export-to-pdf', { body: tableHTML, styles: styles, theme: theme, params: calculationParams });
-            });
-            
-            ipcRenderer.on('pdf-export-complete', (event, result) => {
-            if (result.success) {
-                // Üçüncü parametre olarak dosya yolunu gönderiyoruz
-                showAlert(`PDF başarıyla kaydedildi: ${result.path}`, 'success', result.path);
-                } 
-            else {
-                showAlert(`PDF oluşturulurken bir hata oluştu: ${result.error}`, 'danger');
-                }
-            });
-        });
-
-        const PROFILE_STORAGE_KEY = 'herdSimProfiles';
-        const LAST_PROFILE_KEY = 'herdSimLastProfile';
-        function getFormValues() { const formIds = ['initialCowCount', 'initialPregnancyMonth', 'randomInitialPregnancy', 'monthlyCows', 'newCowPregnancyMonth', 'randomMonthlyPregnancy', 'autoAddCows', 'femaleCowThreshold', 'maxAutoAddCows', 'cowSourceType', 'newCowPrice', 'months', 'summaryPeriod', 'milkingThreshold', 'calfMaturityAge', 'maleCalfRemovalAge', 'birthSuccessRate', 'postBirthWait', 'useFemaleSeed', 'startYear', 'startMonth', 'milkPerCow', 'milkPrice', 'maleCalf', 'feedCostPerCow', 'calfFeedRatio', 'otherExpenses', 'herdSizeLimit', 'oldCowPrice', 'enableDeaths', 'monthlyCowDeathRate', 'monthlyCalfDeathRate', 'enableCowAddition', 'cowAdditionFrequency', 'staffSalary', 'staffPerAnimal', 'enableProfitBasedPurchase', 'profitThresholdForPurchase', 'maxProfitBasedPurchase', 'stopPurchaseAtLimit']; const values = {}; formIds.forEach(id => { const el = document.getElementById(id); if(el) { if (el.type === 'checkbox') { values[id] = el.checked; } else { values[id] = el.value; } } }); return values; }
-        function setFormValues(profileData) { for (const id in profileData) { const el = document.getElementById(id); if (el) { if (el.type === 'checkbox') { el.checked = profileData[id]; } else { el.value = profileData[id]; } const changeEvent = new Event('change'); if (['randomInitialPregnancy', 'randomMonthlyPregnancy', 'enableCowAddition', 'autoAddCows', 'enableDeaths', 'cowSourceType', 'enableProfitBasedPurchase'].includes(id)) { el.dispatchEvent(changeEvent); } } } }
-        function getProfiles() { const profiles = localStorage.getItem(PROFILE_STORAGE_KEY); return profiles ? JSON.parse(profiles) : {}; }
-        function initializeProfileSystem() { let profiles = getProfiles(); if (Object.keys(profiles).length === 0) { profiles['Varsayılan'] = getFormValues(); localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profiles)); } populateProfileSelector(profiles); const lastProfileName = localStorage.getItem(LAST_PROFILE_KEY); if (lastProfileName && profiles[lastProfileName]) { document.getElementById('profileSelector').value = lastProfileName; loadProfile(lastProfileName); } else { const firstProfileName = Object.keys(profiles)[0]; if (firstProfileName) { loadProfile(firstProfileName); } } }
-        function populateProfileSelector(profiles) { const selector = document.getElementById('profileSelector'); selector.innerHTML = ''; for (const name in profiles) { const option = document.createElement('option'); option.value = name; option.textContent = name; selector.appendChild(option); } }
-        function loadProfile(profileName) { const profiles = getProfiles(); if (profiles[profileName]) { setFormValues(profiles[profileName]); localStorage.setItem(LAST_PROFILE_KEY, profileName); document.getElementById('profileSelector').value = profileName; } }
-        function openSaveProfileModal() { const currentProfileName = document.getElementById('profileSelector').value || 'Yeni Profil'; document.getElementById('profileNameInput').value = currentProfileName; saveProfileModal.show(); }
-        function executeSaveProfile() { const profileNameInput = document.getElementById('profileNameInput'); const profileName = profileNameInput.value.trim(); if (profileName) { const profiles = getProfiles(); profiles[profileName] = getFormValues(); localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profiles)); localStorage.setItem(LAST_PROFILE_KEY, profileName); populateProfileSelector(profiles); document.getElementById('profileSelector').value = profileName; saveProfileModal.hide(); showAlert(`'${profileName}' profili kaydedildi.`, 'success'); } else { showAlert('Profil adı boş olamaz.', 'danger'); } }
-        function openDeleteConfirmModal() { const selector = document.getElementById('profileSelector'); const profileNameToDelete = selector.value; if (!profileNameToDelete) { showAlert('Silinecek bir profil seçili değil.', 'danger'); return; } const profiles = getProfiles(); if (Object.keys(profiles).length <= 1) { showAlert('Son profili silemezsiniz.', 'danger'); return; } profileToDelete = profileNameToDelete; document.getElementById('profileNameToDeleteSpan').textContent = profileToDelete; deleteConfirmModal.show(); }
-        function executeDeleteProfile() { if (!profileToDelete) return; const profiles = getProfiles(); delete profiles[profileToDelete]; localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profiles)); const remainingProfiles = Object.keys(profiles); const newActiveProfile = remainingProfiles.length > 0 ? remainingProfiles[0] : null; localStorage.setItem(LAST_PROFILE_KEY, newActiveProfile); populateProfileSelector(profiles); if (newActiveProfile) { loadProfile(newActiveProfile); } showAlert(`'${profileToDelete}' profili silindi.`, 'info'); deleteConfirmModal.hide(); profileToDelete = null; }
-        
-    function showAlert(message, type = 'info', filePath = null) {
-        const alertContainer = document.querySelector('.alert-container');
-        const alertElement = document.createElement('div');
-        alertElement.className = `custom-alert alert-${type}`;
-        alertElement.innerHTML = `<div class="alert-content"><i class="bi ${type === 'success' ? 'bi-check-circle' : 'bi-info-circle'}"></i><span>${message}</span></div><button type="button" class="close-btn" onclick="this.parentElement.remove()"><i class="bi bi-x"></i></button>`;
-
-        // Eğer bir dosya yolu geldiyse, alert'i tıklanabilir yap
-        if (filePath) {
-            alertElement.classList.add('alert-clickable');
-            alertElement.title = 'Dosyayı açmak için tıklayın'; // Tooltip ekle
-            alertElement.onclick = (e) => {
-                // Kapatma butonuna tıklandıysa işlemi yapma
-                if (e.target.tagName.toLowerCase() !== 'i' && e.target.tagName.toLowerCase() !== 'button') {
-                    ipcRenderer.send('open-file', filePath);
-                }
-            };
-        }
-
-        alertContainer.appendChild(alertElement);
-        setTimeout(() => alertElement.classList.add('show'), 10);
-        setTimeout(() => {
-            alertElement.classList.remove('show');
-            setTimeout(() => alertElement.remove(), 300);
-        }, 8000); // Alert'in ekranda kalma süresini biraz artırdık
-    }
-        
-        function createRatioProgressBar(ratio) {
-            if (typeof ratio === 'undefined' || ratio === null) {
-                ratio = 0;
-            }
-            const getRatioBarClass = (r) => { if (r >= 80) return 'excellent'; if (r >= 70) return 'good'; if (r >= 60) return 'average'; return 'poor'; }; 
-            const barClass = getRatioBarClass(ratio); 
-            return `<div class="ratio-progress"><div class="progress-bar ${barClass}" style="width: ${ratio}%"></div><div class="progress-text">${ratio}%</div></div>`; 
-        }
-
-        function resetTable() {
-            const tbody = document.getElementById('resultsTable');
-            if (tbody.children.length > 0) {
-                tbody.innerHTML = '';
-                originalHerdStats = [];
-                showAlert('Hesaplama sonuçları temizlendi.', 'info');
-            } else {
-                showAlert('Tablo zaten boş.', 'info');
-            }
-        }
-
-        function runFullCalculation(e) {
-            e.preventDefault();
-            const params = getFormValues();
-            try {
-                const numericParams = { initial_cow_count: parseInt(params.initialCowCount), initial_pregnancy_month: params.randomInitialPregnancy ? 'random' : parseInt(params.initialPregnancyMonth), monthly_new_cows: parseInt(params.monthlyCows), new_cow_pregnancy_month: params.randomMonthlyPregnancy ? 'random' : parseInt(params.newCowPregnancyMonth), months: parseInt(params.months), milking_threshold: parseInt(params.milkingThreshold), calf_maturity_age: parseInt(params.calfMaturityAge), male_calf_removal_age: parseInt(params.maleCalfRemovalAge), birth_success_rate: parseInt(params.birthSuccessRate), post_birth_wait: parseInt(params.postBirthWait), start_year: parseInt(params.startYear), start_month: parseInt(params.startMonth), milk_per_cow: parseFloat(params.milkPerCow), milk_price: parseFloat(params.milkPrice), male_calf_price: parseFloat(params.maleCalf), feed_cost_per_cow: parseFloat(params.feedCostPerCow), calf_feed_ratio: parseFloat(params.calfFeedRatio) / 100, other_expenses: parseFloat(params.otherExpenses), staff_salary: parseFloat(params.staffSalary), staff_per_animal: parseInt(params.staffPerAnimal), female_cow_threshold: parseInt(params.femaleCowThreshold), max_auto_add_cows: parseInt(params.maxAutoAddCows), new_cow_price: parseFloat(params.newCowPrice), cow_addition_frequency: parseInt(params.cowAdditionFrequency), old_cow_price: parseFloat(params.oldCowPrice), monthly_cow_death_rate: parseFloat(params.monthlyCowDeathRate), monthly_calf_death_rate: parseFloat(params.monthlyCalfDeathRate), herd_size_limit: params.herdSizeLimit ? parseInt(params.herdSizeLimit) : null, use_female_sperm: params.useFemaleSeed, auto_add_cows: params.autoAddCows, cow_source_type: params.cowSourceType, enable_cow_addition: params.enableCowAddition, enable_deaths: params.enableDeaths, enable_profit_based_purchase: params.enableProfitBasedPurchase, profit_threshold_for_purchase: parseFloat(params.profitThresholdForPurchase), max_profit_based_purchase: parseInt(params.maxProfitBasedPurchase), stop_purchase_at_limit: params.stopPurchaseAtLimit };
-                ipcRenderer.send('calculate-herd', numericParams);
-            } catch (error) {
-                showAlert('Lütfen tüm alanları doğru şekilde doldurun.', 'danger');
-            }
-        }
-        
-        function runFinancialRecalculation() {
-            if (originalHerdStats.length === 0) {
-                showAlert('Önce bir hesaplama yapmalısınız!', 'danger');
-                return;
-            }
-
-            const params = getFormValues();
-            const financialParams = {
-                milk_per_cow: parseFloat(params.milkPerCow),
-                milk_price: parseFloat(params.milkPrice),
-                male_calf_price: parseFloat(params.maleCalf),
-                feed_cost_per_cow: parseFloat(params.feedCostPerCow),
-                calf_feed_ratio: parseFloat(params.calfFeedRatio) / 100,
-                other_expenses: parseFloat(params.otherExpenses),
-                staff_salary: parseFloat(params.staffSalary),
-                staff_per_animal: parseInt(params.staffPerAnimal),
-                cow_source_type: params.cowSourceType,
-                new_cow_price: parseFloat(params.newCowPrice),
-                old_cow_price: parseFloat(params.oldCowPrice),
-                monthly_cows: parseInt(params.monthlyCows) || 0,
-                enable_cow_addition: params.enableCowAddition,
-            };
-
-            const recalculatedStats = JSON.parse(JSON.stringify(originalHerdStats));
-
-            recalculatedStats.forEach(month => {
-                const new_income = Math.round(
-                    (month.milking_cows * financialParams.milk_per_cow * 30 * financialParams.milk_price) +
-                    (month.current_removed_males * financialParams.male_calf_price) +
-                    (month.current_removed_old_cows * financialParams.old_cow_price)
-                );
-                
-                const total_cows_for_costing = month.total_animals - (month.female_calves + month.male_calves);
-                const total_calves_for_costing = month.female_calves + month.male_calves;
-
-                const cow_feed_cost = total_cows_for_costing * financialParams.feed_cost_per_cow * 30;
-                const calf_feed_cost = total_calves_for_costing * financialParams.feed_cost_per_cow * 30 * financialParams.calf_feed_ratio;
-                const staff_expense = (financialParams.staff_per_animal > 0) ? Math.floor(month.total_animals / financialParams.staff_per_animal) * financialParams.staff_salary : 0;
-                
-                let periodic_cow_cost = 0;
-                if (financialParams.cow_source_type === 'internal' && financialParams.enable_cow_addition && month.is_addition_month) {
-                    const manual_cows = financialParams.monthly_cows;
-                    const auto_cows = month.auto_added_cows || 0;
-                    periodic_cow_cost = (manual_cows + auto_cows) * financialParams.new_cow_price;
-                }
-                
-                const profit_purchase_cost = (month.cows_bought_with_profit || 0) * financialParams.new_cow_price;
-
-                const new_expenses = Math.round(
-                    cow_feed_cost + 
-                    calf_feed_cost + 
-                    staff_expense + 
-                    periodic_cow_cost + 
-                    profit_purchase_cost + 
-                    financialParams.other_expenses
-                );
-
-                month.income = new_income;
-                month.expenses = new_expenses;
-                month.profit = new_income - new_expenses;
-            });
-
-            renderTable(recalculatedStats);
-            showAlert('Finansal veriler başarıyla güncellendi.', 'success');
-        }
-
-        ipcRenderer.on('calculation-results', (event, results) => {
-            originalHerdStats = results;
-            renderTable(results);
-            showAlert('Hesaplama başarıyla tamamlandı.', 'success');
-        });
-
-        ipcRenderer.on('calculation-error', (event, error) => { showAlert('Hesaplama sırasında bir hata oluştu: ' + error, 'danger'); });
-        
-        function renderTable(results) {
-            const tbody = document.getElementById('resultsTable');
-            tbody.innerHTML = '';
-            let periodIncome = 0, periodExpenses = 0, periodProfit = 0, totalIncome = 0, totalExpenses = 0, totalProfit = 0;
-            const summaryPeriod = parseInt(document.getElementById('summaryPeriod').value);
-            let monthCounter = 0;
-            let periodStartDate = '';
-            let totalDeadCows = 0;
-            let totalDeadCalves = 0;
-
-            if (!results || results.length === 0) return;
-
-            results.forEach((month, index) => {
-                if (monthCounter === 0) { periodStartDate = month.date; }
-                totalDeadCows = month.total_dead_cows;
-                totalDeadCalves = month.total_dead_calves;
-                const profitClass = month.profit >= 0 ? 'table-success-light' : 'table-danger-light';
-                const row = document.createElement('tr');
-                
-                let totalAnimalsText = `${month.total_animals}`;
-                let additions = [];
-                if (month.manual_cows_added > 0) {
-                    additions.push(`${month.manual_cows_added}P`);
-                }
-                if (month.auto_added_cows > 0) {
-                    additions.push(`${month.auto_added_cows}B`);
-                }
-                if (month.cows_bought_with_profit > 0) {
-                    additions.push(`${month.cows_bought_with_profit}K`);
-                }
-
-                if (additions.length > 0) {
-                    totalAnimalsText += ` (+${additions.join('+')})`;
-                }
-
-                if (month.current_removed_old_cows > 0) {
-                    totalAnimalsText += ` (-${month.current_removed_old_cows}S)`;
-                }
-                
-                row.innerHTML = `<td>${month.date}</td><td>${month.milking_cows} / ${month.dry_cows}</td><td class="td-vertical-middle">${createRatioProgressBar(month.milking_ratio)}</td><td>${month.pregnant_heifers} / ${month.pregnant_cows}</td><td>${month.female_calves}</td><td>${month.male_calves} / ${month.total_removed_male_calves}</td><td>${totalAnimalsText}</td><td>${month.monthly_dead_cows} / ${month.monthly_dead_calves}</td><td>${month.income.toLocaleString('tr-TR')} ₺ / ${month.expenses.toLocaleString('tr-TR')} ₺</td><td class="${profitClass}">${month.profit.toLocaleString('tr-TR')} ₺</td>`;
-                tbody.appendChild(row);
-                
-                totalIncome += month.income; 
-                totalExpenses += month.expenses; 
-                totalProfit += month.profit; 
-                periodIncome += month.income; 
-                periodExpenses += month.expenses; 
-                periodProfit += month.profit; 
-                monthCounter++;
-
-                if (monthCounter === summaryPeriod || index === results.length - 1) {
-                    if (monthCounter > 0) {
-                        const summaryRow = document.createElement('tr');
-                        summaryRow.className = 'table-secondary fw-bold summary-row';
-                        const summaryProfitClass = periodProfit >= 0 ? 'text-success' : 'text-danger';
-                        summaryRow.innerHTML = `<td colspan="6" class="text-end">${periodStartDate} - ${month.date} Dönemi Toplamları:</td><td></td><td>(${totalDeadCows}/${totalDeadCalves})</td><td>${periodIncome.toLocaleString('tr-TR')} ₺ / ${periodExpenses.toLocaleString('tr-TR')} ₺</td><td class="${summaryProfitClass}">${periodProfit.toLocaleString('tr-TR')} ₺</td>`;
-                        tbody.appendChild(summaryRow);
-                    }
-                    periodIncome = 0; periodExpenses = 0; periodProfit = 0; monthCounter = 0;
-                }
-            });
-            
-            const totalRow = document.createElement('tr');
-            totalRow.className = 'table-dark fw-bold';
-            const totalProfitClass = totalProfit >= 0 ? 'text-success' : 'text-danger';
-            totalRow.innerHTML = `<td colspan="6" class="text-end">Genel Toplam:</td><td></td><td>(${totalDeadCows}/${totalDeadCalves})</td><td>${totalIncome.toLocaleString('tr-TR')} ₺ / ${totalExpenses.toLocaleString('tr-TR')} ₺</td><td class="${totalProfitClass}">${totalProfit.toLocaleString('tr-TR')} ₺</td>`;
-            tbody.appendChild(totalRow);
-        }
-    </script>
+    <script src="assets/js/renderer.js" defer></script>
 </body>
 </html>
