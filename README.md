@@ -137,3 +137,8 @@ Bu projeyi özgürce kullanabilir, geliştirebilir ve dağıtabilirsiniz.
 **Erdem EFE**
 
 Her türlü katkı ve geri bildirim için iletişime geçmekten çekinmeyin.
+
+
+Bilinen Hatalar//
+-Periyodik ekleme açık değilken buzağıdan ekleme yapılmıyor.
+

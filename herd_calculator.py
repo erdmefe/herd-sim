@@ -112,29 +112,22 @@ class HerdManager:
 
     def add_monthly_cow(self):
         self.monthly_cow_expenses = 0
-        # DEĞİŞİKLİK 2: Her ay başında geçici sayacı sıfırla
-        self.auto_added_this_month = 0
-        
-        # NOT: 'Buzağıdan Otomatik Ekle' özelliğinin 'Periyodik İnek Ekle' frekansına bağlı
-        # çalışması şu anki mantıktır. Eğer bunun her ay çalışmasını isterseniz,
-        # 'if self.auto_add_cows:' bloğunun tamamını bu fonksiyonun dışına, process_month'a taşımak gerekir.
-        # Şimdilik sadece raporlama hatasını düzeltiyoruz.
-        
+
         if not self.enable_cow_addition:
             return
-            
+
         self.months_since_last_addition += 1
         if self.months_since_last_addition < self.cow_addition_frequency:
             return
-            
+
         self.months_since_last_addition = 0
-        
+
         for _ in range(self.monthly_new_cows):
             if self.new_cow_pregnancy_month == 'random':
                 preg_month = random.randint(1, 9)
             else:
                 preg_month = self.new_cow_pregnancy_month
-                
+
             months_until_birth = 9 - preg_month + 1
             new_cow = Cow(
                 is_pregnant=True,
@@ -145,49 +138,52 @@ class HerdManager:
                 is_dead=False
             )
             self.cows.append(new_cow)
-            
+
             if self.cow_source_type == 'internal':
                 self.monthly_cow_expenses += self.new_cow_price
 
-        if self.auto_add_cows:
-            female_calves = sorted(
-                [calf for calf in self.calves if calf.is_female],
-                key=lambda x: x.age_months,
-                reverse=True
-            )
-            
-            auto_add_count = min(
-                len(female_calves) // self.female_cow_threshold,
-                self.max_auto_add_cows
-            )
-            
-            if auto_add_count > 0:
-                # DEĞİŞİKLİK 3: Hesaplanan sayıyı geçici değişkene ata
-                self.auto_added_this_month = auto_add_count
+    def add_cows_from_calves(self):
+        """Buzağıdan otomatik inek ekleme - periyodik inek eklemeden bağımsız çalışır"""
+        if not self.auto_add_cows:
+            return
 
-                calves_to_remove = female_calves[:auto_add_count * self.female_cow_threshold]
-                
-                self.calves = [calf for calf in self.calves if calf not in calves_to_remove]
-                
-                for _ in range(auto_add_count):
-                    if self.new_cow_pregnancy_month == 'random':
-                        preg_month = random.randint(1, 9)
-                    else:
-                        preg_month = self.new_cow_pregnancy_month
-                        
-                    months_until_birth = 9 - preg_month + 1
-                    new_cow = Cow(
-                        is_pregnant=True,
-                        months_until_birth=months_until_birth,
-                        is_milking=months_until_birth > self.milking_threshold,
-                        has_given_birth=True,
-                        age_months=0,
-                        is_dead=False
-                    )
-                    self.cows.append(new_cow)
-                    
-                    if self.cow_source_type == 'internal':
-                        self.monthly_cow_expenses += self.new_cow_price
+        female_calves = sorted(
+            [calf for calf in self.calves if calf.is_female],
+            key=lambda x: x.age_months,
+            reverse=True
+        )
+
+        auto_add_count = min(
+            len(female_calves) // self.female_cow_threshold,
+            self.max_auto_add_cows
+        )
+
+        if auto_add_count > 0:
+            self.auto_added_this_month = auto_add_count
+
+            calves_to_remove = female_calves[:auto_add_count * self.female_cow_threshold]
+
+            self.calves = [calf for calf in self.calves if calf not in calves_to_remove]
+
+            for _ in range(auto_add_count):
+                if self.new_cow_pregnancy_month == 'random':
+                    preg_month = random.randint(1, 9)
+                else:
+                    preg_month = self.new_cow_pregnancy_month
+
+                months_until_birth = 9 - preg_month + 1
+                new_cow = Cow(
+                    is_pregnant=True,
+                    months_until_birth=months_until_birth,
+                    is_milking=months_until_birth > self.milking_threshold,
+                    has_given_birth=True,
+                    age_months=0,
+                    is_dead=False
+                )
+                self.cows.append(new_cow)
+
+                if self.cow_source_type == 'internal':
+                    self.monthly_cow_expenses += self.new_cow_price
     
     def remove_old_cows(self):
         if not self.herd_size_limit:
@@ -289,6 +285,9 @@ class HerdManager:
         return cows_to_buy, purchase_cost
     
     def process_month(self):
+        # Her ay başında buzağıdan otomatik ekleme sayacını sıfırla
+        self.auto_added_this_month = 0
+
         for cow in self.cows:
             if not cow.is_dead:
                 cow.age_months += 1
@@ -383,6 +382,7 @@ class HerdManager:
                       )]
 
         self.add_monthly_cow()
+        self.add_cows_from_calves()  # Buzağıdan otomatik inek ekleme - her ay çalışır
         self.remove_old_cows()
         self.process_deaths()
 
